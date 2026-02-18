@@ -49,7 +49,6 @@
         <div class="control-item"><span class="key">↓</span> Thrust</div>
         <div class="control-item"><span class="key">Space</span> Fire</div>
     </div>
-    <div id="gameOver">VEHICLE DESTROYED</div>
     <canvas id="gameCanvas"></canvas>
     <canvas id="minimap" width="150" height="150"></canvas>
 
@@ -112,6 +111,7 @@ const ship = {
     home_x: 0, // player's home block
     home_y: 0,
     bullets: [],
+    particles: [],
     land() {
         this.vx = 0.0;
         this.vy = 0.0;
@@ -225,8 +225,45 @@ function updateBullets() {
     });
 }
 
-function update() {
+function updateParticles() {
+    ship.particles = ship.particles.filter(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        return p.life > 0;
+    });
+}
+
+function createExplosion(x, y) {
+    for (let i = 0; i < 15; i++) {
+        ship.particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 10, // Random blast direction
+            vy: (Math.random() - 0.5) * 10,
+            life: 1.0,      // Opacity/Life starts at 100%
+            decay: 0.02 + Math.random() * 0.03,
+            color: Math.random() > 0.5 ? '#fff' : '#f80' // White and Orange sparks
+        });
+    }
+    ship.vx = 0;
+    ship.vy = 0;
+}
+
+function triggerGameOver() {
     if (gameOver) return;
+    gameOver = true;
+
+    // Launch the particles at the ship's current location
+    createExplosion(ship.x, ship.y);
+
+    setTimeout(() => {
+        gameOver = false;
+        ship.reset();
+    }, 1500);
+}
+
+function update() {
 
     if (keys['ArrowLeft'] && ship.fuel > 0.0) {
         ship.angle -= ship.rotationSpeed;
@@ -246,7 +283,7 @@ function update() {
         ship.landed = false;
         ship.fuel -= FUEL_CONSUMPTION;
     }
-    if (keys['Space']) {
+    if (keys['Space'] && !gameOver) {
         ship.fire();
     }
 
@@ -274,13 +311,16 @@ function update() {
         }
     }
 
-    ship.x += ship.vx;
-    ship.y += ship.vy;
+    if (!gameOver) {
+        ship.x += ship.vx;
+        ship.y += ship.vy;
+    }
 
     const angle_deg = 360 + (Math.ceil(ship.angle * RAD_2_DEG) % 360);
     const speed = Math.sqrt(ship.vy * ship.vy + ship.vx * ship.vx);
 
     updateBullets();
+    updateParticles();
 
     // Collision or land
     const gx = Math.floor(ship.x / TILE_SIZE);
@@ -290,13 +330,7 @@ function update() {
         if (gx === ship.home_x && gy === ship.home_y && angle_deg > 250 && angle_deg < 290) {
             ship.land();
         } else {
-            gameOver = true;
-            document.getElementById('gameOver').style.display = 'block';
-            setTimeout(() => {
-                gameOver = false;
-                document.getElementById('gameOver').style.display = 'none';
-                ship.reset();
-            }, 1500);
+            triggerGameOver();
         }
     }
 }
@@ -372,6 +406,15 @@ function drawBullets(camX, camY) {
     });
 }
 
+function drawParticles() {
+    ship.particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, 3, 3);
+    });
+    ctx.globalAlpha = 1.0; // Reset alpha for other drawing
+}
+
 function draw() {
     ctx.fillStyle = '#111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -403,6 +446,7 @@ function draw() {
     }
 
     drawBullets();
+    drawParticles();
 
     // Ship
     if (!gameOver) {
