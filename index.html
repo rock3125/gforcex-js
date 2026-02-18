@@ -5,6 +5,34 @@
     <style>
         body { margin: 0; background: #000; overflow: hidden; color: #0f0; font-family: 'Courier New', monospace; }
         canvas { display: block; }
+        .controls-legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .key {
+            display: inline-block;
+            border: 1px solid #0f0;
+            border-radius: 3px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            background: #020;
+            min-width: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .control-item {
+            margin-bottom: 5px;
+        }
         .hud { position: absolute; top: 20px; left: 20px; text-shadow: 2px 2px #000; pointer-events: none; }
         #minimap { position: absolute; bottom: 20px; right: 20px; border: 2px solid #555; background: rgba(0,0,0,0.8); }
         #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2em; display: none; color: red; }
@@ -15,6 +43,11 @@
         ROCK'S G-FORCE X<br/><br/>
         FUEL:<br/>
         AMMO:<br/>
+    </div>
+    <div class="controls-legend">
+        <div class="control-item"><span class="key">←</span> <span class="key">→</span> Rotate</div>
+        <div class="control-item"><span class="key">↓</span> Thrust</div>
+        <div class="control-item"><span class="key">Space</span> Fire</div>
     </div>
     <div id="gameOver">VEHICLE DESTROYED</div>
     <canvas id="gameCanvas"></canvas>
