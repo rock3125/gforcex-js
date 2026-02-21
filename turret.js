@@ -126,7 +126,7 @@ class Turret {
         });
     }
 
-    draw(ship) {
+    draw() {
 
         // Draw the turret barrel first
         ctx.save();
@@ -154,11 +154,11 @@ class Turret {
         ctx.fill();
         ctx.restore();
 
-        this.drawBullets(ship);
+        this.drawBullets();
     }
 
 
-    drawBullets(ship) {
+    drawBullets() {
 
         this.bullets.forEach(b => {
             ctx.save();
