@@ -54,7 +54,7 @@
     <div class="control-item"><span class="key">&#8592;</span> <span class="key">&#8594;</span> Rotate</div>
     <div class="control-item"><span class="key">&#8595;</span> Thrust</div>
     <div class="control-item"><span class="key">Space</span> Fire</div>
-    <div class="control-item"><span class="key">M</span> <span id="music"></span></div>
+    <div class="control-item"><span class="key">M</span> <span id="music"> Music on/off</span></div>
 </div>
 <canvas id="gameCanvas"></canvas>
 <canvas id="minimap" width="150" height="150"></canvas>
@@ -64,7 +64,6 @@
     const ctx = canvas.getContext('2d');
     const mCanvas = document.getElementById('minimap');
     const mCtx = mCanvas.getContext('2d');
-    const text_display_ctrl = document.getElementById("music");
 
     // keyboard map (key: string -> boolean)
     let keys = {};
@@ -109,7 +108,7 @@
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
     // set text
-    set_cookie("title_music", music_on ? "on" : "off", 7, document.getElementById("music"));
+    set_cookie("title_music", music_on ? "on" : "off", 7);
     map.generateWorld();
     ship.reset(map);
 

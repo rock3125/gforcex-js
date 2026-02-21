@@ -34,23 +34,23 @@ function stop_title_track() {
     }
 }
 
-function toggle_music(text_display_ctrl) {
+function toggle_music() {
     if (music_on) {
         music_on = false
-        set_cookie("title_music", "off", 7, text_display_ctrl)
+        set_cookie("title_music", "off", 7)
         if (title_track) title_track.pause();
     } else {
         music_on = true
-        set_cookie("title_music", "on", 7, text_display_ctrl)
+        set_cookie("title_music", "on", 7)
         if (title_track) title_track.play();
     }
 }
 
 // m or M to toggle music
-function sound_check_keys(text_display_ctrl) {
+function sound_check_keys() {
     if (keys['KeyM'] && music_down === 0) {
         music_down = 15;
-        toggle_music(text_display_ctrl);
+        toggle_music();
     } else if (music_down > 0) {
         music_down -= 1;
     }
