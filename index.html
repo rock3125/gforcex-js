@@ -2,6 +2,12 @@
 <html>
 <head>
     <title>G-Force X</title>
+    <script type="text/javascript" src="cookie.js"></script>
+    <script type="text/javascript" src="const.js"></script>
+    <script type="text/javascript" src="sound.js"></script>
+    <script type="text/javascript" src="map.js"></script>
+    <script type="text/javascript" src="ship.js"></script>
+    <script type="text/javascript" src="turret.js"></script>
     <style>
         body { margin: 0; background: #000; overflow: hidden; color: #0f0; font-family: 'Courier New', monospace; }
         canvas { display: block; }
@@ -58,510 +64,34 @@
     const ctx = canvas.getContext('2d');
     const mCanvas = document.getElementById('minimap');
     const mCtx = mCanvas.getContext('2d');
+    const text_display_ctrl = document.getElementById("music");
 
-    function get_cookie(cname) {
-        let name = cname + "=";
-        let decodedCookie = decodeURIComponent(document.cookie);
-        let ca = decodedCookie.split(';');
-        for(let i = 0; i <ca.length; i++) {
-            let c = ca[i];
-            while (c.charAt(0) === ' ') {
-                c = c.substring(1);
-            }
-            if (c.indexOf(name) === 0) {
-                return c.substring(name.length, c.length);
-            }
-        }
-        return "";
-    }
-
-    function set_cookie(cname, cvalue, ex_days) {
-        const d = new Date();
-        d.setTime(d.getTime() + (ex_days*24*60*60*1000));
-        let expires = "expires="+ d.toUTCString();
-        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-
-        if (cname === "title_music") {
-            if (cvalue === "on") {
-                document.getElementById("music").textContent = "Music on"
-            } else {
-                document.getElementById("music").textContent = "Music off"
-            }
-        }
-    }
-
-    // audio
-    let title_track = null;
-    let music_on = get_cookie("title_music") === "" || get_cookie("title_music") === "on";
-    let music_down = 0; // music key down count
-
-    // set text
-    set_cookie("title_music", music_on ? "on" : "off", 7);
-
-    // --- 30x30 Tile Config ---
-    const GRID_RES = 30;
-    const WORLD_SIZE = 3000;
-    const TILE_SIZE = WORLD_SIZE / GRID_RES; // 100px per tile
-    const WATER_Y = WORLD_SIZE * 0.6;
-
-    // --- Physics ---
-    const GRAVITY = 0.075;
-    const BUOYANCY = -0.07;
-    const AIR_DRAG = 0.98;
-    const WATER_DRAG = 0.97;
-    const RAD_2_DEG = 57.29578;
-    const FUEL_CONSUMPTION = 0.01
-    const REFUEL_SPEED = 0.5
-    const MAX_FUEL = 100;
-    const BASE_COLOR = '#404080'
-    const BASE_COLOR_SMALL_MAP = '#4040f0'
-
-    // fuel gauge location
-    const FUEL_X = 85;
-    const FUEL_Y = 61;
-    const FUEL_HEIGHT = 10
-    const FUEL_WIDTH = 100
-
-    // ammo gauge
-    const AMMO_X = 85;
-    const AMMO_Y = 81;
-    const AMMO_HEIGHT = 10
-    const AMMO_WIDTH = 100
-
-    // ammo constants
-    const REARM_SPEED = 5;
-    const MAX_AMMO = 1000;
-    const MAX_BULLETS_AT_ONCE = 100;
-    const AMMO_SPEED = 8;
-    const AMMO_TTL = 100;
-
-    let grid = [];
+    // keyboard map (key: string -> boolean)
     let keys = {};
     let gameOver = false;
-
-    const ship = {
-        x: 0, y: 0, vx: 0, vy: 0,
-        angle: -Math.PI / 2,
-        rotationSpeed: 0.04,
-        thrust: 0.16,
-        fuel: 0.0,
-        ammo: 0,
-        landed: true,
-        size: 10,
-        home_x: 0, // player's home block
-        home_y: 0,
-        bullets: [],
-        particles: [],
-        land() {
-            this.vx = 0.0;
-            this.vy = 0.0;
-            this.angle = -Math.PI / 2;
-            this.landed = true;
-            // reset ship height
-            this.y = (this.home_y-1) * TILE_SIZE + (TILE_SIZE - TILE_SIZE / 5);
-        },
-        fire() {
-            if (this.bullets.length < MAX_BULLETS_AT_ONCE && this.ammo > 0) {
-                this.ammo -= 1;
-                this.bullets.push({
-                    x: this.x,
-                    y: this.y,
-                    // Add ship velocity to bullet so it feels natural
-                    vx: Math.cos(this.angle) * AMMO_SPEED + this.vx,
-                    vy: Math.sin(this.angle) * AMMO_SPEED + this.vy,
-                    ttl: AMMO_TTL
-                });
-            }
-        },
-        reset() {
-            this.vx = 0; this.vy = 0;
-            this.angle = -Math.PI / 2;
-            this.landed = true;
-            this.home_x = 0; this.home_y = 0;
-            // create the home 'base' block
-            for(let y=5; y<GRID_RES; y++) {
-                for(let x=1; x<GRID_RES; x++) {
-                    if(this.home_x === 0 && this.home_y === 0 &&
-                        grid[x][y] !== 0 && grid[x][y-1] === 0 && grid[x][y-2] === 0) {
-                        // set ship's location and the home block
-                        this.x = x * TILE_SIZE + TILE_SIZE/2;
-                        this.y = (y-1) * TILE_SIZE + (TILE_SIZE - TILE_SIZE / 5);
-                        this.home_x = x;
-                        this.home_y = y;
-                    }
-                }
-            }
-        }
-    };
-
-    function play_title_track() {
-        if (!title_track) {
-            title_track = new Audio('./resources/the-pearl.mp3');
-            title_track.loop = true;
-            title_track.volume = 0.5; // 50%
-            title_track.addEventListener('ended', function() {
-                this.currentTime = 0;
-                this.play();
-            }, false);
-        }
-        const startPlaying = () => {
-            if (music_on) {
-                // Browsers return a Promise for .play()
-                title_track.play().catch(e => console.error("Autoplay blocked:", e));
-            }
-        };
-        if (title_track.readyState >= 4) {
-            startPlaying();
-        } else {
-            // 2. Otherwise, wait for the event
-            title_track.addEventListener('canplaythrough', startPlaying, { once: true });
-        }
-    }
-
-    function stop_title_track() {
-        if (title_track) {
-            title_track.pause();
-        }
-    }
-
-    function toggle_music() {
-        if (music_on) {
-            music_on = false
-            set_cookie("title_music", "off", 7)
-            if (title_track) title_track.pause();
-        } else {
-            music_on = true
-            set_cookie("title_music", "on", 7)
-            if (title_track) title_track.play();
-        }
-    }
-
-    function generateWorld() {
-        // 1. Noise
-        grid = Array.from({ length: GRID_RES }, () => Array(GRID_RES).fill(1));
-        for (let x = 1; x < GRID_RES - 1; x++) {
-            for (let y = 1; y < GRID_RES - 1; y++) {
-                if (Math.random() > 0.42) grid[x][y] = 0;
-            }
-        }
-        // 2. Smooth
-        for(let i=0; i<2; i++) {
-            let newGrid = JSON.parse(JSON.stringify(grid));
-            for (let x = 1; x < GRID_RES - 1; x++) {
-                for (let y = 1; y < GRID_RES - 1; y++) {
-                    let neighbors = 0;
-                    for(let i=-1; i<=1; i++) for(let j=-1; j<=1; j++) neighbors += grid[x+i][y+j];
-                    newGrid[x][y] = neighbors > 4 ? 1 : 0;
-                }
-            }
-            grid = newGrid;
-        }
-        ensureConnectivity();
-        drawMinimap();
-    }
-
-    function ensureConnectivity() {
-        let regions = [];
-        let visited = Array.from({ length: GRID_RES }, () => Array(GRID_RES).fill(false));
-        for (let x = 0; x < GRID_RES; x++) {
-            for (let y = 0; y < GRID_RES; y++) {
-                if (grid[x][y] === 0 && !visited[x][y]) {
-                    let region = [];
-                    let queue = [[x, y]];
-                    visited[x][y] = true;
-                    while (queue.length > 0) {
-                        let [cx, cy] = queue.shift();
-                        region.push([cx, cy]);
-                        [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx, dy]) => {
-                            let nx = cx+dx, ny = cy+dy;
-                            if(nx >= 0 && nx < GRID_RES && ny >= 0 && ny < GRID_RES && grid[nx][ny] === 0 && !visited[nx][ny]) {
-                                visited[nx][ny] = true;
-                                queue.push([nx, ny]);
-                            }
-                        });
-                    }
-                    regions.push(region);
-                }
-            }
-        }
-        regions.sort((a, b) => b.length - a.length);
-        for (let i = 1; i < regions.length; i++) {
-            regions[i].forEach(([x, y]) => grid[x][y] = 1);
-        }
-    }
-
-    function updateBullets() {
-        ship.bullets = ship.bullets.filter(b => {
-            // Move
-            b.x += b.vx;
-            b.y += b.vy;
-            b.ttl--;
-
-            // Collision with Cave Walls
-            const gx = Math.floor(b.x / TILE_SIZE);
-            const gy = Math.floor(b.y / TILE_SIZE);
-            const hitWall = grid[gx] && grid[gx][gy] === 1;
-
-            // Keep bullet only if alive and hasn't hit a wall
-            return b.ttl > 0 && !hitWall;
-        });
-    }
-
-    function updateParticles() {
-        ship.particles = ship.particles.filter(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life -= p.decay;
-            return p.life > 0;
-        });
-    }
-
-    function createExplosion(x, y) {
-        for (let i = 0; i < 15; i++) {
-            ship.particles.push({
-                x: x,
-                y: y,
-                vx: (Math.random() - 0.5) * 10, // Random blast direction
-                vy: (Math.random() - 0.5) * 10,
-                life: 1.0,      // Opacity/Life starts at 100%
-                decay: 0.02 + Math.random() * 0.03,
-                color: Math.random() > 0.5 ? '#fff' : '#f80' // White and Orange sparks
-            });
-        }
-        ship.vx = 0;
-        ship.vy = 0;
-    }
+    const ship = new Ship();
+    const map = new Map();
 
     function triggerGameOver() {
         if (gameOver) return;
         gameOver = true;
 
         // Launch the particles at the ship's current location
-        createExplosion(ship.x, ship.y);
+        ship.createExplosion();
 
         setTimeout(() => {
             gameOver = false;
-            ship.reset();
+            ship.reset(map);
         }, 1500);
     }
 
     function update() {
-
-        if (keys['ArrowLeft'] && ship.fuel > 0.0) {
-            ship.angle -= ship.rotationSpeed;
-            ship.fuel -= FUEL_CONSUMPTION;
-        }
-        if (keys['ArrowRight'] && ship.fuel > 0.0) {
-            ship.angle += ship.rotationSpeed;
-            ship.fuel -= FUEL_CONSUMPTION;
-        }
-        if (keys['ArrowDown'] && ship.fuel > 0.0) {
-            ship.vx += Math.cos(ship.angle) * ship.thrust;
-            if (ship.landed) {
-                ship.landed = false;
-                ship.vy = -1.0; // take-off boost
-                play_title_track();
-            } else {
-                ship.vy += Math.sin(ship.angle) * ship.thrust;
-            }
-            ship.fuel -= FUEL_CONSUMPTION;
-        }
-        if (keys['Space'] && !gameOver) {
-            ship.fire();
-        }
-        // m or M to toggle music
-        if (keys['KeyM'] && music_down === 0) {
-            music_down = 15;
-            toggle_music();
-        } else if (music_down > 0) {
-            music_down -= 1;
-        }
-
-        const inWater = ship.y > WATER_Y;
-        ship.vy += inWater ? BUOYANCY : GRAVITY;
-        ship.vx *= (inWater ? WATER_DRAG : AIR_DRAG);
-        ship.vy *= (inWater ? WATER_DRAG : AIR_DRAG);
-
-        // landed - no speed
-        if (ship.landed) {
-            ship.vx = 0.0;
-            ship.vy = 0.0;
-            ship.angle = -Math.PI / 2;
-            if (ship.fuel < MAX_FUEL) {
-                ship.fuel += REFUEL_SPEED;
-                if (ship.fuel > MAX_FUEL) {
-                    ship.fuel = MAX_FUEL;
-                }
-            }
-            if (ship.ammo < MAX_AMMO) {
-                ship.ammo += REARM_SPEED;
-                if (ship.ammo > MAX_AMMO) {
-                    ship.ammo = MAX_AMMO;
-                }
-            }
-        }
-
-        if (!gameOver) {
-            ship.x += ship.vx;
-            ship.y += ship.vy;
-        }
-
-        const angle_deg = 360 + (Math.ceil(ship.angle * RAD_2_DEG) % 360);
-
-        updateBullets();
-        updateParticles();
-
-        // Collision or land
-        const gx = Math.floor(ship.x / TILE_SIZE);
-        const gy = Math.floor(ship.y / TILE_SIZE);
-        if (gx < 0 || gx >= GRID_RES || gy < 0 || gy >= GRID_RES || grid[gx][gy] === 1) {
-            // land or game over?
-            if (gx === ship.home_x && gy === ship.home_y && angle_deg > 250 && angle_deg < 290) {
-                ship.land();
-            } else {
-                triggerGameOver();
-            }
-        }
-    }
-
-    function drawFuelGauge() {
-        // Calculate ratio (0.0 to 1.0)
-        const fuelRatio = ship.fuel / MAX_FUEL;
-        const greenWidth = FUEL_WIDTH * fuelRatio;
-        const redWidth = FUEL_WIDTH - greenWidth;
-
-        // Draw Fuel Remaining (Green)
-        ctx.fillStyle = '#080';
-        ctx.fillRect(FUEL_X, FUEL_Y, greenWidth, FUEL_HEIGHT);
-
-        // Draw Fuel Spent (Red)
-        if (ship.fuel < MAX_FUEL) {
-            ctx.fillStyle = '#c00';
-            // Start drawing where the green bar ends
-            ctx.fillRect(FUEL_X + greenWidth, FUEL_Y, redWidth, FUEL_HEIGHT);
-        }
-
-        // Draw a white border around the whole thing
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(FUEL_X, FUEL_Y, FUEL_WIDTH, FUEL_HEIGHT);
-    }
-
-    function drawAmmoGauge() {
-        // Calculate ratio (0.0 to 1.0)
-        const ammoRatio = ship.ammo / MAX_AMMO;
-        const greenWidth = AMMO_WIDTH * ammoRatio;
-        const redWidth = AMMO_WIDTH - greenWidth;
-
-        // Draw Fuel Remaining (Green)
-        ctx.fillStyle = '#048';
-        ctx.fillRect(AMMO_X, AMMO_Y, greenWidth, AMMO_HEIGHT);
-
-        // Draw Fuel Spent (Red)
-        if (ship.fuel < MAX_FUEL) {
-            ctx.fillStyle = '#444';
-            // Start drawing where the green bar ends
-            ctx.fillRect(AMMO_X + greenWidth, AMMO_Y, redWidth, AMMO_HEIGHT);
-        }
-
-        // Draw a white border around the whole thing
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(AMMO_X, AMMO_Y, AMMO_WIDTH, AMMO_HEIGHT);
-    }
-
-    function drawMinimap() {
-        mCtx.clearRect(0,0,150,150);
-        const s = 150 / GRID_RES;
-        for(let x=0; x<GRID_RES; x++) {
-            for(let y=0; y<GRID_RES; y++) {
-                if(grid[x][y] === 1) {
-                    if (x === ship.home_x && y === ship.home_y) {
-                        mCtx.fillStyle = BASE_COLOR_SMALL_MAP;
-                    } else {
-                        mCtx.fillStyle = '#444';
-                    }
-                    mCtx.fillRect(x*s, y*s, s, s);
-                }
-            }
-        }
-    }
-
-    function drawBullets(camX, camY) {
-        ctx.fillStyle = "yellow";
-        ship.bullets.forEach(b => {
-            // Draw as a small 2x2 square
-            ctx.fillRect(b.x, b.y, 2, 2);
-        });
-    }
-
-    function drawParticles() {
-        ship.particles.forEach(p => {
-            ctx.globalAlpha = p.life;
-            ctx.fillStyle = p.color;
-            ctx.fillRect(p.x, p.y, 3, 3);
-        });
-        ctx.globalAlpha = 1.0; // Reset alpha for other drawing
+        ship.update(map);
+        sound_check_keys();
     }
 
     function draw() {
-        ctx.fillStyle = '#111';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        const camX = -ship.x + canvas.width / 2;
-        const camY = -ship.y + canvas.height / 2;
-
-        ctx.save();
-        ctx.translate(camX, camY);
-
-        // Water
-        ctx.fillStyle = 'rgba(0, 50, 200, 0.2)';
-        ctx.fillRect(0, WATER_Y, WORLD_SIZE, WORLD_SIZE - WATER_Y);
-
-        // Grid Terrain
-        for (let x = 0; x < GRID_RES; x++) {
-            for (let y = 0; y < GRID_RES; y++) {
-                if (grid[x][y] === 1) {
-                    if (x === ship.home_x && y === ship.home_y) {
-                        ctx.fillStyle = BASE_COLOR;
-                    } else {
-                        ctx.fillStyle = (y * TILE_SIZE >= WATER_Y) ? '#1a2a3a' : '#332211';
-                    }
-                    ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                    ctx.strokeStyle = '#000';
-                    ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                }
-            }
-        }
-
-        drawBullets();
-        drawParticles();
-
-        // Ship
-        if (!gameOver) {
-            ctx.save();
-            ctx.translate(ship.x, ship.y);
-            ctx.rotate(ship.angle);
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(12, 0); ctx.lineTo(-10, -8); ctx.lineTo(-10, 8); ctx.closePath();
-            ctx.stroke();
-            if (keys['ArrowDown'] && ship.fuel > 0.0) {
-                ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-25, 0);
-                ctx.strokeStyle = 'orange'; ctx.stroke();
-            }
-            ctx.restore();
-        }
-        ctx.restore();
-
-        // Update Minimap Player Dot
-        drawMinimap();
-        drawFuelGauge();
-        drawAmmoGauge();
-
-        mCtx.fillStyle = 'red';
-        mCtx.fillRect((ship.x/WORLD_SIZE)*150 - 2, (ship.y/WORLD_SIZE)*150 - 2, 4, 4);
+        map.draw(ship);
     }
 
     function loop() {
@@ -577,9 +107,13 @@
     });
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-    generateWorld();
-    ship.reset();
+    // set text
+    set_cookie("title_music", music_on ? "on" : "off", 7, document.getElementById("music"));
+    map.generateWorld();
+    ship.reset(map);
+
     loop();
+
 </script>
 </body>
 </html>
