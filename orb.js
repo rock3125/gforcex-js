@@ -25,9 +25,11 @@ class Orb {
     }
 
     collect() {
+        if (this.collected) return;
         this.collected = true;
         // Trigger bonus logic here (e.g., fuel += 20 or score += 100)
         // createExplosion(this.x, this.y, '#0ff'); // Cyan sparkles
+        collectOrb();
     }
 
     draw() {

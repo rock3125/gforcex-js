@@ -223,6 +223,15 @@ class Ship {
             }
         }
 
+        // not landed, out of fuel - count-down to self-destruct
+        if (!this.landed && this.fuel <= 0.0) {
+            setTimeout(() => {
+                if (!this.landed && this.fuel <= 0.0) {
+                    triggerGameOver()
+                }
+            }, 1500);
+        }
+
         if (!gameOver) {
             this.x += this.vx;
             this.y += this.vy;

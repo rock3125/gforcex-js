@@ -19,13 +19,13 @@ const BASE_COLOR_SMALL_MAP = '#4040f0'
 
 // fuel gauge location
 const FUEL_X = 85;
-const FUEL_Y = 61;
+const FUEL_Y = 81;
 const FUEL_HEIGHT = 10
 const FUEL_WIDTH = 100
 
 // ammo gauge
 const AMMO_X = 85;
-const AMMO_Y = 81;
+const AMMO_Y = 101;
 const AMMO_HEIGHT = 10
 const AMMO_WIDTH = 100
 
