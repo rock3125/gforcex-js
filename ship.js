@@ -50,6 +50,10 @@ class Ship {
         this.angle = -Math.PI / 2;
         this.landed = true;
         this.home_x = 0; this.home_y = 0;
+        this.fuel = 0.0;
+        this.ammo = 0;
+        this.bullets = [];
+        this.particles = [];
         // create the home 'base' block
         for(let y=5; y<GRID_RES; y++) {
             for(let x=1; x<GRID_RES; x++) {

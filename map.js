@@ -11,6 +11,8 @@ class Map {
     }
 
     generateWorld() {
+        this.turret = [];
+        this.orbs = [];
         // Noise
         this.grid = Array.from({ length: GRID_RES }, () => Array(GRID_RES).fill(1));
         for (let x = 1; x < GRID_RES - 1; x++) {
