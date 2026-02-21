@@ -26,7 +26,7 @@ class Ship {
         this.angle = -Math.PI / 2;
         this.landed = true;
         // reset ship height
-        this.y = (this.home_y-1) * TILE_SIZE + (TILE_SIZE - TILE_SIZE / 5);
+        this.y = (this.home_y-1) * TILE_SIZE + (TILE_SIZE - TILE_SIZE / 10);
     }
 
     fire() {
@@ -55,7 +55,7 @@ class Ship {
                     map.grid[x][y] !== 0 && map.grid[x][y-1] === 0 && map.grid[x][y-2] === 0) {
                     // set ship's location and the home block
                     this.x = x * TILE_SIZE + TILE_SIZE/2;
-                    this.y = (y-1) * TILE_SIZE + (TILE_SIZE - TILE_SIZE / 5);
+                    this.y = (y-1) * TILE_SIZE + (TILE_SIZE - TILE_SIZE / 10);
                     this.home_x = x;
                     this.home_y = y;
                 }
