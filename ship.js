@@ -292,10 +292,12 @@ class Ship {
         ctx.lineWidth = 2;
         for (let i = 0; i < this.lives; i++) {
             ctx.translate(16, 0);
+            ctx.save();
+            ctx.rotate(Math.PI * 1.5)
             ctx.beginPath();
             ctx.moveTo(6, 0); ctx.lineTo(-5, -4); ctx.lineTo(-5, 4);
             ctx.closePath();
-            ctx.closePath();
+            ctx.restore();
             ctx.stroke();
         }
         ctx.restore();
