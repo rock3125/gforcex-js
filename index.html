@@ -17,7 +17,8 @@
     ROCK'S G-FORCE X<br/><br/>
     SCORE: <span id="score">0</span><br/>
     FUEL:<br/>
-    AMMO:<br/>
+    AMMO:<br/><br/>
+    LIVES: <span id="lives"></span><br/>
 </div>
 <div class="controls-legend">
     <div class="control-item"><span class="key">&#8592;</span> <span class="key">&#8594;</span> Rotate</div>
@@ -34,13 +35,13 @@
     const mCanvas = document.getElementById('minimap');
     const mCtx = mCanvas.getContext('2d');
     const score_ctrl = document.getElementById('score');
+    const lives_ctrl = document.getElementById('lives');
 
     // keyboard map (key: string -> boolean)
     let keys = {};
     let gameOver = false;
     const ship = new Ship();
-    const map = new Map(4, 10);
-    let score = 0
+    const map = new Map(4, 10); // num turrets, num orbs
 
     function triggerGameOver() {
         if (gameOver) return;
@@ -48,15 +49,12 @@
 
         // Launch the particles at the ship's current location
         ship.createExplosion();
+        ship.lives -= 1
 
         setTimeout(() => {
-            gameOver = false;
+            gameOver = ship.lives <= 0;
             ship.reset(map);
         }, 1500);
-    }
-
-    function collectOrb() {
-        score += 500
     }
 
     function update() {
@@ -67,7 +65,13 @@
 
     function draw() {
         map.draw(ship);
-        score_ctrl.innerText = score.toLocaleString()
+        score_ctrl.innerText = ship.score.toLocaleString()
+
+        let str = "";
+        for (let i = 0; i < ship.lives; i++) {
+            str = str + "|";
+        }
+        lives_ctrl.innerText = str;
     }
 
     function loop() {

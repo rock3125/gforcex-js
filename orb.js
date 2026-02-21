@@ -20,16 +20,16 @@ class Orb {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < this.size + ship.size) {
-            this.collect();
+            this.collect(ship);
         }
     }
 
-    collect() {
+    collect(ship) {
         if (this.collected) return;
         this.collected = true;
         // Trigger bonus logic here (e.g., fuel += 20 or score += 100)
         // createExplosion(this.x, this.y, '#0ff'); // Cyan sparkles
-        collectOrb();
+        ship.collectOrb();
     }
 
     draw() {

@@ -18,6 +18,8 @@ class Ship {
         this.home_y = 0;
         this.bullets = [];
         this.particles = [];
+        this.lives = 3
+        this.score = 0
     }
 
     land() {
@@ -63,7 +65,7 @@ class Ship {
         }
     }
 
-    drawBullets(camX, camY) {
+    drawBullets() {
         ctx.fillStyle = "yellow";
         this.bullets.forEach(b => {
             // Draw as a small 2x2 square
@@ -143,6 +145,10 @@ class Ship {
         });
     }
 
+    collectOrb() {
+        this.score += 500
+    }
+
     updateParticles() {
         this.particles = this.particles.filter(p => {
             p.x += p.vx;
@@ -197,6 +203,7 @@ class Ship {
     }
 
     update(map) {
+
         this.checkKeys();
 
         const inWater = this.y > WATER_Y;
@@ -257,6 +264,8 @@ class Ship {
 
     // draw the ship
     draw() {
+        if (this.lives <= 0) return
+
         ctx.save();
         ctx.translate(ship.x, ship.y);
         ctx.rotate(ship.angle);
