@@ -12,7 +12,9 @@ class Turret {
         this.side = side; // 'left' or 'right'
         this.angle = (side === 'left') ? Math.PI : 0;
         this.fireCooldown = 0;
-        this.range = 300;
+        this.range = 600;
+        this.speed = 5; // bullet speed
+        this.cool_down = 10; // how many frame before can fire again
         this.bullets = [];
     }
 
@@ -70,9 +72,9 @@ class Turret {
             }
 
             // Fire if cooled down
-            if (this.fireCooldown === 0 && can_shoot) {
+            if (this.fireCooldown === 0 && can_shoot && !gameOver) {
                 this.fire();
-                this.fireCooldown = 60; // 1 second
+                this.fireCooldown = this.cool_down;
             }
 
         } else {
@@ -113,19 +115,31 @@ class Turret {
     }
 
     fire() {
-        const speed = 5;
         // add to the bullets
         this.bullets.push({
             x: this.x + Math.cos(this.angle) * 20,
             y: this.y + Math.sin(this.angle) * 20,
-            vx: Math.cos(this.angle) * speed,
-            vy: Math.sin(this.angle) * speed,
+            vx: Math.cos(this.angle) * this.speed,
+            vy: Math.sin(this.angle) * this.speed,
             ttl: 200,
             owner: 'turret' // Tag it so it doesn't kill the turret
         });
     }
 
     draw(ship) {
+
+        // Draw the turret barrel first
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.strokeStyle = "#999";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(20, 0);
+        ctx.stroke();
+        ctx.restore();
+
         // draw the triangle base
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -138,18 +152,6 @@ class Turret {
         ctx.lineTo(-10, 0);
         ctx.closePath();
         ctx.fill();
-        ctx.restore();
-
-        // Draw the turret barrel
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
-        ctx.strokeStyle = "#999";
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(20, 0);
-        ctx.stroke();
         ctx.restore();
 
         this.drawBullets(ship);
