@@ -281,4 +281,24 @@ class Ship {
         ctx.restore();
     }
 
+
+    // draw the ship's lives
+    drawLives(x, y) {
+        if (this.lives <= 0) return
+
+        ctx.save();
+        ctx.translate(x, y)
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < this.lives; i++) {
+            ctx.translate(16, 0);
+            ctx.beginPath();
+            ctx.moveTo(6, 0); ctx.lineTo(-5, -4); ctx.lineTo(-5, 4);
+            ctx.closePath();
+            ctx.closePath();
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
 }

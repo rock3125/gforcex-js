@@ -18,7 +18,7 @@
     SCORE: <span id="score">0</span><br/>
     FUEL:<br/>
     AMMO:<br/><br/>
-    LIVES: <span id="lives"></span><br/>
+    LIVES:<br/>
 </div>
 <div class="controls-legend">
     <div class="control-item"><span class="key">&#8592;</span> <span class="key">&#8594;</span> Rotate</div>
@@ -35,7 +35,6 @@
     const mCanvas = document.getElementById('minimap');
     const mCtx = mCanvas.getContext('2d');
     const score_ctrl = document.getElementById('score');
-    const lives_ctrl = document.getElementById('lives');
 
     // keyboard map (key: string -> boolean)
     let keys = {};
@@ -66,12 +65,7 @@
     function draw() {
         map.draw(ship);
         score_ctrl.innerText = ship.score.toLocaleString()
-
-        let str = "";
-        for (let i = 0; i < ship.lives; i++) {
-            str = str + "|";
-        }
-        lives_ctrl.innerText = str;
+        ship.drawLives(80, 138);
     }
 
     function loop() {
