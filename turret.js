@@ -1,15 +1,22 @@
 
 class Turret {
+
     constructor(tileX, tileY, side) {
-        this.x = tileX * TILE_SIZE + TILE_SIZE / 2;
+        // set the correct offset of the turret depending on where it lives
+        if (side === 'left') {
+            this.x = tileX * TILE_SIZE + (TILE_SIZE - (TILE_SIZE / 10));
+        } else {
+            this.x = tileX * TILE_SIZE + (TILE_SIZE / 10);
+        }
         this.y = tileY * TILE_SIZE + TILE_SIZE / 2;
         this.side = side; // 'left' or 'right'
         this.angle = (side === 'left') ? Math.PI : 0;
         this.fireCooldown = 0;
-        this.range = 600;
+        this.range = 300;
+        this.bullets = [];
     }
 
-    update() {
+    update(map, ship) {
         if (this.fireCooldown > 0) this.fireCooldown--;
 
         // Calculate distance to ship
@@ -18,24 +25,97 @@ class Turret {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < this.range) {
-            // Point towards player
-            const targetAngle = Math.atan2(dy, dx);
+            // Point towards player, Basic tracking logic
+            this.angle = Math.atan2(dy, dx);
 
-            // Basic tracking logic (smoothing the rotation)
-            this.angle = targetAngle;
+            // limit the angles
+            let can_shoot = false;
+            if (this.side === 'right') {
+                // as long as the ship is on the correct side of this turret
+                if (ship.x > this.x) {
+                    if (this.angle < -0.8)
+                        this.angle = -0.8
+                    else
+                        can_shoot = true
+                    if (this.angle > 0.8)
+                        this.angle = 0.8
+                    else
+                        can_shoot = true
+                } else {
+                    // otherwise - just point forward
+                    this.angle = 0
+                }
+
+            } else {
+
+                // the ship is on the correct side of this turret
+                if (ship.x < this.x) {
+                    // ship above the turret
+                    if (this.y > ship.y) {
+                        if (this.angle > -1.3)
+                            this.angle = -1.3
+                        else
+                            can_shoot = true
+                    } else {
+                        if (this.angle < 1.3)
+                            this.angle = 1.3
+                        else
+                            can_shoot = true
+                    }
+                } else {
+                    // just point forward
+                    this.angle = Math.PI;
+                }
+
+            }
 
             // Fire if cooled down
-            if (this.fireCooldown === 0) {
+            if (this.fireCooldown === 0 && can_shoot) {
                 this.fire();
-                this.fireCooldown = 120; // 2 seconds at 60fps
+                this.fireCooldown = 60; // 1 second
             }
+
+        } else {
+
+            // out of range, point forward
+            if (this.side === 'right') {
+                this.angle = 0
+            } else {
+                this.angle = Math.PI
+            }
+
         }
+
+        this.updateBullets(map, ship)
+    }
+
+    updateBullets(map, ship) {
+        this.bullets = this.bullets.filter(b => {
+            b.x += b.vx;
+            b.y += b.vy;
+            b.ttl--;
+
+            // Check if turret bullet hits ship
+            const dx = b.x - ship.x;
+            const dy = b.y - ship.y;
+            if (Math.sqrt(dx*dx + dy*dy) < ship.size) {
+                triggerGameOver();
+                return false;
+            }
+
+            // Standard wall collision
+            const gx = Math.floor(b.x / TILE_SIZE);
+            const gy = Math.floor(b.y / TILE_SIZE);
+            if (map.grid[gx] && map.grid[gx][gy] === 1) return false;
+
+            return b.ttl > 0;
+        });
     }
 
     fire() {
         const speed = 5;
-        // Re-use your existing bullet logic/array
-        bullets.push({
+        // add to the bullets
+        this.bullets.push({
             x: this.x + Math.cos(this.angle) * 20,
             y: this.y + Math.sin(this.angle) * 20,
             vx: Math.cos(this.angle) * speed,
@@ -45,11 +125,11 @@ class Turret {
         });
     }
 
-    draw(camX, camY) {
+    draw(ship) {
+        // draw the triangle base
         ctx.save();
-        ctx.translate(this.x + camX, this.y + camY);
-
-        // Draw the Base (Triangle)
+        ctx.translate(this.x, this.y);
+        // draw the base
         ctx.rotate((this.side === 'left') ? 0 : Math.PI);
         ctx.fillStyle = "#666";
         ctx.beginPath();
@@ -58,11 +138,11 @@ class Turret {
         ctx.lineTo(-10, 0);
         ctx.closePath();
         ctx.fill();
-
-        // Draw the Barrel (Rotates)
         ctx.restore();
+
+        // Draw the turret barrel
         ctx.save();
-        ctx.translate(this.x + camX, this.y + camY);
+        ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
         ctx.strokeStyle = "#999";
         ctx.lineWidth = 4;
@@ -71,5 +151,31 @@ class Turret {
         ctx.lineTo(20, 0);
         ctx.stroke();
         ctx.restore();
+
+        this.drawBullets(ship);
     }
+
+
+    drawBullets(ship) {
+
+        this.bullets.forEach(b => {
+            ctx.save();
+            ctx.translate(b.x, b.y);
+
+            ctx.beginPath();
+            ctx.fillStyle = '#00ffff';
+
+            // Draw as a small circle or glowing square
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Optional: Add a small glow effect
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = ctx.fillStyle;
+
+            ctx.restore();
+        });
+    }
+
 }
+

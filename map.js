@@ -2,20 +2,22 @@
 
 class Map {
 
-    constructor() {
+    constructor(num_turrets) {
         this.grid = [];
+        this.turret = [];
+        this.num_turrets = num_turrets;
     }
 
     generateWorld() {
-        // 1. Noise
+        // Noise
         this.grid = Array.from({ length: GRID_RES }, () => Array(GRID_RES).fill(1));
         for (let x = 1; x < GRID_RES - 1; x++) {
             for (let y = 1; y < GRID_RES - 1; y++) {
                 if (Math.random() > 0.42) this.grid[x][y] = 0;
             }
         }
-        // 2. Smooth
-        for(let i=0; i<2; i++) {
+        // Smooth
+        for(let i = 0; i < 2; i++) {
             let newGrid = JSON.parse(JSON.stringify(this.grid));
             for (let x = 1; x < GRID_RES - 1; x++) {
                 for (let y = 1; y < GRID_RES - 1; y++) {
@@ -26,7 +28,31 @@ class Map {
             }
             this.grid = newGrid;
         }
+
+        // make sure different caves connect
         this.ensureConnectivity();
+
+        // set up the turrets in the cave
+        for (let x = 1; x < GRID_RES - 1; x++) {
+            for (let y = 1; y < GRID_RES - 1; y++) {
+
+                if (this.turret.length >= this.num_turrets)
+                    break;
+
+                if (this.grid[x][y] === 0) { // If current tile is empty
+                    // Check if tile to the RIGHT is a wall
+                    if (this.grid[x+1][y] === 1 && Math.random() > 0.95) {
+                        this.turret.push(new Turret(x, y, 'left'));
+                    }
+                    // Check if tile to the LEFT is a wall
+                    else if (this.grid[x-1][y] === 1 && Math.random() > 0.95) {
+                        this.turret.push(new Turret(x, y, 'right'));
+                    }
+                }
+
+            }
+        }
+
     }
 
     ensureConnectivity() {
@@ -76,8 +102,15 @@ class Map {
         }
     }
 
+    update(ship) {
+        // Turrets
+        this.turret.forEach(t => {
+            t.update(this, ship);
+        });
+    }
 
     draw(ship) {
+
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -115,12 +148,18 @@ class Map {
             ship.draw();
         }
 
+        // Turrets
+        this.turret.forEach(t => {
+            t.draw(ship);
+        });
+
         // Update Minimap Player Dot
         this.drawMinimap();
-        ship.drawFuelGauge();
-        ship.drawAmmoGauge();
 
         ctx.restore();
+
+        ship.drawFuelGauge();
+        ship.drawAmmoGauge();
 
         // draw the "ship" on the mini-map
         mCtx.fillStyle = 'red';

@@ -70,7 +70,7 @@
     let keys = {};
     let gameOver = false;
     const ship = new Ship();
-    const map = new Map();
+    const map = new Map(4);
 
     function triggerGameOver() {
         if (gameOver) return;
@@ -87,6 +87,7 @@
 
     function update() {
         ship.update(map);
+        map.update(ship);
         sound_check_keys();
     }
 
