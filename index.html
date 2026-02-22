@@ -43,6 +43,7 @@
     let keys = {};
     let gameOver = false;
     const ship = new Ship();
+    const player = new Player();
 
     // set up a map with turrets and orbs
     let num_turrets = 4;
@@ -107,9 +108,9 @@
     }
 
     function update() {
-        ship.update(map, keys);
+        ship.update(map, keys, player);
         map.update(ship);
-        sound_check_keys();
+        player.sound_check_keys(keys);
         if (gameOver && ship.lives <= 0) {
             document.getElementById('gameOver').style.display = 'block'
             document.getElementById('restart').style.display = 'block'
@@ -121,7 +122,6 @@
 
     function draw() {
         map.draw(ctx, mCtx, ship);
-
         // set the player's score as a number inside HTML
         score_ctrl.innerText = ship.score.toLocaleString()
     }
@@ -140,7 +140,7 @@
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
     // set text
-    set_cookie("title_music", music_on ? "on" : "off", 7);
+    set_cookie("title_music", player.music_on ? "on" : "off", 7);
 
     // the order of these next four statements is important
     restart();

@@ -265,8 +265,10 @@ class Ship {
 
     /**
      * read player keyboard and act
+     * @param keys the keyboard state
+     * @param player optional a music player to check
      */
-    checkKeys(keys) {
+    checkKeys(keys, player) {
         if (keys['ArrowLeft'] && this.fuel > 0.0) {
             this.angle -= this.rotationSpeed;
             this.fuel -= FUEL_CONSUMPTION;
@@ -282,7 +284,7 @@ class Ship {
                 this.vy = -1.0; // take-off boost
 
                 // start the soundtrack the first time we take-off
-                play_title_track();
+                if (player) player.play_title_track();
 
             } else {
                 this.vy += Math.sin(this.angle) * this.thrust;
@@ -298,10 +300,11 @@ class Ship {
      * player update logic
      * @param map the map the player finds themselves in
      * @param keys the keys controlling the player
+     * @param player the sound player (optional)
      */
-    update(map, keys) {
+    update(map, keys, player) {
 
-        this.checkKeys(keys);
+        this.checkKeys(keys, player);
 
         const inWater = this.y > WATER_Y;
         this.vy += inWater ? BUOYANCY : GRAVITY;
