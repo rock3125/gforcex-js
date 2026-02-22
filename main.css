@@ -61,9 +61,20 @@ canvas {
 
 #gameOver {
     position: absolute;
-    top: 50%;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: darkred;
+    font-size: 2em;
+    display: none;
+}
+
+#nextLevel {
+    position: absolute;
+    top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 2em;
+    color: aquamarine;
     display: none;
 }

@@ -19,6 +19,8 @@ class Ship {
         this.size = 10;             // the size of the ship
         this.home_x = 0;            // ship start home block (not yet set)
         this.home_y = 0;
+        this.end_x = 0;             // the end block for next level
+        this.end_y = 0;
         this.bullets = [];          // player's bullets as they exist
         this.particles = [];        // player explosion animation holder
         this.lives = 3              // initial number of lives of player
@@ -35,6 +37,18 @@ class Ship {
         this.landed = true;         // and we've landed
         // snap the ship to be on the platform
         this.y = (this.home_y-1) * TILE_SIZE + (TILE_SIZE - TILE_SIZE / 10);
+    }
+
+    /**
+     * the player lands and switches to the next level
+     */
+    landNextLevel() {
+        this.vx = 0.0;              // no more speed
+        this.vy = 0.0;
+        this.angle = -Math.PI / 2;  // point up
+        this.landed = true;         // and we've landed
+        // snap the ship to be on the platform
+        this.y = (this.end_y - 1) * TILE_SIZE + (TILE_SIZE - TILE_SIZE / 10);
     }
 
     /**
@@ -68,28 +82,45 @@ class Ship {
         this.landed = true;         // we've landed
         this.home_x = 0;            // we don't have a home location yet
         this.home_y = 0;
+        this.end_x = 0;             // we don't have a final-end location yet
+        this.end_y = 0;
         this.fuel = 0.0;            // we're out of fuel and ammo
         this.ammo = 0;
         this.bullets = [];          // we're not shooting
         this.particles = [];        // nor exploding
 
         // find a home 'base' block on the left hand side of the map
+        const half_way = GRID_RES / 2
         for(let y = 5; y < GRID_RES; y++) {
-            for(let x = 1; x < GRID_RES / 2; x++) {
-                // already set?
-                if (this.home_x !== 0 && this.home_y !== 0) break;
-                // a non-empty space with two empty spaces above it?
-                if (map.grid[x][y] !== 0 && map.grid[x][y-1] === 0 && map.grid[x][y-2] === 0) {
-                    // set ship's location and the home block
-                    this.x = x * TILE_SIZE + TILE_SIZE/2;
-                    this.y = (y-1) * TILE_SIZE + (TILE_SIZE - TILE_SIZE / 10);
-                    this.home_x = x;
-                    this.home_y = y;
+            for(let x = 1; x < GRID_RES; x++) {
+
+                // not set yet?
+                if (this.home_x === 0 && this.home_y === 0 && x < (half_way - 1)) {
+                    // a non-empty space with two empty spaces above it?
+                    if (map.grid[x][y] !== 0 && map.grid[x][y - 1] === 0 && map.grid[x][y - 2] === 0) {
+                        // set ship's location and the home block
+                        this.x = x * TILE_SIZE + TILE_SIZE / 2;
+                        this.y = (y - 1) * TILE_SIZE + (TILE_SIZE - TILE_SIZE / 10);
+                        this.home_x = x;
+                        this.home_y = y;
+                    }
                 }
-            }
-        }
-        // successfully set? (can't be under-water!)
-        return this.home_x > 0 && this.home_y > 0 && this.home_y < WATER_Y
+
+                // not set yet?
+                if (this.end_x === 0 && this.end_y === 0 && x > (half_way + 1)) {
+                    // a non-empty space with two empty spaces above it?
+                    if (map.grid[x][y] !== 0 && map.grid[x][y - 1] === 0 && map.grid[x][y - 2] === 0) {
+                        this.end_x = x;
+                        this.end_y = y;
+                    }
+                }
+
+            } // for each x
+        } // for each y
+
+        // all successfully set? (can't be under-water!)
+        return this.home_x > 0 && this.home_y > 0 && this.home_y < WATER_Y &&
+               this.end_x > 0 && this.end_y > 0 && this.end_y < WATER_Y
     }
 
     /**
@@ -325,6 +356,9 @@ class Ship {
             // land or game over?
             if (gx === this.home_x && gy === this.home_y && angle_deg > 250 && angle_deg < 290) {
                 this.land();
+            } else if (gx === this.end_x && gy === this.end_y && angle_deg > 250 && angle_deg < 290) {
+                this.landNextLevel();
+                triggerNextLevel(); // next level
             } else {
                 triggerGameOver(); // crash!
             }

@@ -202,6 +202,8 @@ class Map {
                 if(this.grid[x][y] === 1) {
                     if (x === ship.home_x && y === ship.home_y) {
                         mCtx.fillStyle = BASE_COLOR_SMALL_MAP;
+                    } else if (x === ship.end_x && y === ship.end_y) {
+                        mCtx.fillStyle = NEXT_LEVEL_COLOR_SMALL_MAP;
                     } else {
                         mCtx.fillStyle = '#444';
                     }
@@ -260,6 +262,8 @@ class Map {
                     // our base has a different colour from all the other blocks
                     if (x === ship.home_x && y === ship.home_y) {
                         ctx.fillStyle = BASE_COLOR;
+                    } else if (x === ship.end_x && y === ship.end_y) {
+                        ctx.fillStyle = NEXT_LEVEL_COLOR;
                     } else {
                         // blocks under water have a different colour from above the water-line
                         ctx.fillStyle = (y * TILE_SIZE >= WATER_Y) ? '#1a2a3a' : '#332211';

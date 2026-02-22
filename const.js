@@ -15,7 +15,9 @@ const FUEL_CONSUMPTION = 0.01           // fuel consumption unit per action
 const REFUEL_SPEED = 0.5                // speed of refuel on launchpad
 const MAX_FUEL = 100;                   // fuel level
 const BASE_COLOR = '#404080'             // colour of our base block
+const NEXT_LEVEL_COLOR = '#408040'       // colour of our next level block
 const BASE_COLOR_SMALL_MAP = '#4040f0'   // colour of the base block in the small map
+const NEXT_LEVEL_COLOR_SMALL_MAP = '#40f040'   // colour of the finish block in the small map
 
 // fuel gauge location on screen
 const FUEL_X = 85;
