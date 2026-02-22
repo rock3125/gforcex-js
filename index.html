@@ -47,8 +47,16 @@
     function restart() {
         gameOver = false;
         keys = {};
-        map.generateWorld();
-        ship.reset(map);
+
+        // the order of these calls statements is important
+        let success = false; // re-create the world until it is right
+        while (!success) {
+            map.generateWorld();
+            success = ship.reset(map); // returns true if we could place the player
+            map.placeTurrets(ship)
+            map.placeOrbs(ship)
+        }
+
         ship.lives = 3
         ship.score = 0
         document.getElementById('gameOver').style.display = 'none'
@@ -72,7 +80,7 @@
     }
 
     function update() {
-        ship.update(map);
+        ship.update(map, keys);
         map.update(ship);
         sound_check_keys();
         if (gameOver && ship.lives <= 0) {
@@ -85,9 +93,10 @@
     }
 
     function draw() {
-        map.draw(ship);
+        map.draw(ctx, mCtx, ship);
+
+        // set the player's score as a number inside HTML
         score_ctrl.innerText = ship.score.toLocaleString()
-        ship.drawLives(80, 138);
     }
 
     function loop() {
@@ -105,9 +114,9 @@
 
     // set text
     set_cookie("title_music", music_on ? "on" : "off", 7);
-    map.generateWorld();
-    ship.reset(map);
 
+    // the order of these next four statements is important
+    restart();
     loop();
 
 </script>
