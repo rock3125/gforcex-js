@@ -42,14 +42,17 @@
     // keyboard map (key: string -> boolean)
     let keys = {};
     let gameOver = false;
-    const ship = new Ship();
-    const player = new Player();
+    const ship = new Ship();     // you, the player
+    const player = new Player(); // audio player
 
-    // set up a map with turrets and orbs
+    // set up a map with initial turrets and orbs
     let num_turrets = 4;
     let num_orbs = 10;
     let map = new Map(num_turrets, num_orbs);
 
+    /**
+     * restart a game - reset lives, score and screen status
+     */
     function restart() {
         gameOver = false;
         keys = {};
@@ -70,6 +73,9 @@
         document.getElementById('nextLevel').style.display = 'none'
     }
 
+    /**
+     * you lose / crash / ran out of fuel
+     */
     function triggerGameOver() {
         if (gameOver) return;
         gameOver = true;
@@ -86,6 +92,9 @@
         }, 1500);
     }
 
+    /**
+     * move to the next level
+     */
     function triggerNextLevel() {
         document.getElementById('nextLevel').style.display = 'block'
         setTimeout(() => {
@@ -104,9 +113,12 @@
             ship.score = old_score;
             ship.lives = old_lives;
 
-        }, 3500);
+        }, 2500);
     }
 
+    /**
+     * Game main update loop (all logic)
+     */
     function update() {
         ship.update(map, keys, player);
         map.update(ship);
@@ -120,32 +132,45 @@
         }
     }
 
+    /**
+     * Game main draw loop (all drawing / graphics)
+     */
     function draw() {
         map.draw(ctx, mCtx, ship);
         // set the player's score as a number inside HTML
         score_ctrl.innerText = ship.score.toLocaleString()
     }
 
+    // the main loop running
     function loop() {
         update();
         draw();
+
+        // The frequency of calls to the callback function will generally match the display refresh rate.
+        // The most common refresh rate is 60hz, (60 cycles/frames per second), though 75hz, 120hz, and 144hz
+        // are also widely used. requestAnimationFrame() calls are paused in most browsers when running in
+        // background tabs in order to improve performance and battery life.
         requestAnimationFrame(loop);
     }
 
+    // set up keyboard processing
     window.addEventListener('keydown', e => keys[e.code] = true);
     window.addEventListener('keyup', e => keys[e.code] = false);
+
+    // set up screen resize logic
     window.addEventListener('resize', () => {
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     });
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-    // set text
+    // music cookie (just in case it wasn't yet set)
     set_cookie("title_music", player.music_on ? "on" : "off", 7);
 
-    // the order of these next four statements is important
+    // restart (first start) game logic
     restart();
+    // loop forever
     loop();
-
 </script>
+
 </body>
 </html>
