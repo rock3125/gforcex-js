@@ -85,7 +85,7 @@
         document.getElementById('nextLevel').style.display = 'block'
         setTimeout(() => {
             // reset the level, and carry across our score to the next level
-            const old_score = ship.score + 10000;   // 10K for reaching the next level
+            const old_score = ship.score + NEXT_LEVEL_SCORE;   // score for reaching the next level
             const old_lives = ship.lives + 1;       // 1 extra live
             restart();
             ship.score = old_score;

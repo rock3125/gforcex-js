@@ -19,6 +19,9 @@ const NEXT_LEVEL_COLOR = '#408040'       // colour of our next level block
 const BASE_COLOR_SMALL_MAP = '#4040f0'   // colour of the base block in the small map
 const NEXT_LEVEL_COLOR_SMALL_MAP = '#40f040'   // colour of the finish block in the small map
 
+const ORB_SCORE = 1000;                 // 1K per orb
+const NEXT_LEVEL_SCORE = 10000;         // 10K for next level
+
 // fuel gauge location on screen
 const FUEL_X = 85;
 const FUEL_Y = 81;

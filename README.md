@@ -3,17 +3,17 @@
 A high-precision, momentum-based cave navigator built with HTML5 Canvas.
 
 ## todo
-
-- shoot turrets
 - added second player networking
-- add landing for level switch
-- 
 
 ## 🚀 Overview
 
 **G-Force X** is a modern reimagining of classic 2D cave-flyers. You pilot a scout ship through a massive $3000 \times 3000$ pixel cavern. The game features a unique **Dual-Gravity** system:
 * **In Air:** Standard gravity pulls you down.
 * **In Water:** Buoyancy pulls you up, accompanied by increased fluid drag.
+* Move to the next level each time for a **10K Bonus**
+* Collect Magical Orbs for **1K Bonus** each
+* Destroy or Avoid Turrets protecting the cave system
+
 
 The terrain is procedurally generated using **Cellular Automata**, ensuring that every playthrough offers a unique, connected, and organic labyrinth.
 

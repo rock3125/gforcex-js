@@ -229,7 +229,7 @@ class Ship {
      * player scores for collecting an orb
      */
     collectOrb() {
-        this.score += 500
+        this.score += ORB_SCORE // orbs collect
     }
 
     /**
