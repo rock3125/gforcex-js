@@ -232,6 +232,19 @@ class Map {
     }
 
     /**
+     * did the user collect all orbs?
+     * @return {boolean} true if there are no uncollected orbs
+     */
+    collected_all_orbs() {
+        let not_collected = 0;
+        // Orbs
+        this.orbs.forEach(orb => {
+            if (!orb.collected) not_collected += 1
+        });
+        return not_collected === 0
+    }
+
+    /**
      * draw the world relative to our ship
      * @param ctx the HTML drawing context
      * @param mCtx the HTML mini-map drawing context

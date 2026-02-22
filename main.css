@@ -78,3 +78,13 @@ canvas {
     color: aquamarine;
     display: none;
 }
+
+#allOrbs {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2em;
+    color: yellow;
+    display: none;
+}

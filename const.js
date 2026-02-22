@@ -20,7 +20,8 @@ const BASE_COLOR_SMALL_MAP = '#4040f0'   // colour of the base block in the smal
 const NEXT_LEVEL_COLOR_SMALL_MAP = '#40f040'   // colour of the finish block in the small map
 
 const ORB_SCORE = 1000;                 // 1K per orb
-const NEXT_LEVEL_SCORE = 10000;         // 10K for next level
+const NEXT_LEVEL_SCORE_FULL = 10000;    // 10K for next level with all orbs collected
+const NEXT_LEVEL_SCORE = 1000;          // 1K for next level without all orbs collected
 
 // fuel gauge location on screen
 const FUEL_X = 85;

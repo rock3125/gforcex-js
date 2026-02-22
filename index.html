@@ -9,12 +9,12 @@
     <script type="text/javascript" src="map.js"></script>
     <script type="text/javascript" src="ship.js"></script>
     <script type="text/javascript" src="turret.js"></script>
-
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
 <div id="gameOver">GAME OVER</div>
 <div id="nextLevel">NEXT LEVEL</div>
+<div id="allOrbs">ALL ORBS COLLECTED!</div>
 <div class="hud">
     ROCK'S G-FORCE X<br/><br/>
     SCORE: <span id="score">0</span><br/>
@@ -47,7 +47,7 @@
 
     // set up a map with initial turrets and orbs
     let num_turrets = 4;
-    let num_orbs = 10;
+    let num_orbs = 6;
     let map = new Map(num_turrets, num_orbs);
 
     /**
@@ -71,6 +71,7 @@
         document.getElementById('gameOver').style.display = 'none'
         document.getElementById('restart').style.display = 'none'
         document.getElementById('nextLevel').style.display = 'none'
+        document.getElementById('allOrbs').style.display = 'none'
     }
 
     /**
@@ -97,9 +98,18 @@
      */
     function triggerNextLevel() {
         document.getElementById('nextLevel').style.display = 'block'
+        if (map.collected_all_orbs()) {
+            document.getElementById('allOrbs').style.display = 'block'
+        }
         setTimeout(() => {
             // reset the level, and carry across our score to the next level
-            const old_score = ship.score + NEXT_LEVEL_SCORE;   // score for reaching the next level
+            let old_score = ship.score;
+            // add score for reaching the next level
+            if (map.collected_all_orbs()) {
+                old_score += NEXT_LEVEL_SCORE_FULL;
+            } else {
+                old_score += NEXT_LEVEL_SCORE;
+            }
             const old_lives = ship.lives + 1;       // 1 extra live
 
             // create the next level
