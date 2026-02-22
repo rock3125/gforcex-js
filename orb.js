@@ -13,6 +13,10 @@ class Orb {
         this.size = 12; // size of the object
     }
 
+    /**
+     * perform orb logic
+     * @param ship the player (distance for collect)
+     */
     update(ship) {
         // floating animation
         this.angle += 0.05;
@@ -28,11 +32,13 @@ class Orb {
         }
     }
 
+    /**
+     * the player collects an orb
+     * @param ship the player
+     */
     collect(ship) {
-        if (this.collected) return; // already collected, don't process
+        if (this.collected) return; // already collected, don't process again
         this.collected = true;
-        // Trigger bonus logic here (e.g., fuel += 20 or score += 100)
-        // createExplosion(this.x, this.y, '#0ff'); // Cyan sparkles
         ship.collectOrb();
     }
 

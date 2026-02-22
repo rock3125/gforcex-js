@@ -191,7 +191,7 @@ class Map {
 
     /**
      * draw the player's mini map of the giant map using the mini map context
-     * @param mCtx the mini mao context
+     * @param mCtx the mini map context
      * @param ship the player
      */
     drawMinimap(mCtx, ship) {
@@ -284,7 +284,7 @@ class Map {
 
         // draw all turrets
         this.turret.forEach(t => {
-            t.draw();
+            t.draw(ctx);
         });
 
         // draw all orbs
