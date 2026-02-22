@@ -19,6 +19,8 @@ class Turret {
         this.speed = 5;             // bullet speed
         this.cool_down = 10;        // how many frame before can fire again
         this.bullets = [];          // the turret's bullets
+        this.particles = [];        // turret explosion animation holder
+        this.destroyed = false;
         this.tileX = tileX;         // keep track of its tile position
         this.tileY = tileY;
     }
@@ -31,79 +33,111 @@ class Turret {
     update(map, ship) {
         if (this.fireCooldown > 0) this.fireCooldown--;
 
-        // Calculate distance to ship
-        const dx = ship.x - this.x;
-        const dy = ship.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        // update any particles
+        this.updateParticles();
+        this.updateBullets(map, ship);
 
-        // player out of range - don't continue
-        if (dist > this.range)  {
-            // out of range, point forward
+        // does the ship hit the turret with its weapons?
+        if (!this.destroyed) {
+            for (let i = 0; i < ship.bullets.length; i++) {
+                const dx = ship.bullets[i].x - this.x;
+                const dy = ship.bullets[i].y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 12) {
+                    this.createExplosion();
+                }
+            }
+
+            // Calculate distance to ship
+            const dx = ship.x - this.x;
+            const dy = ship.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // player out of range - don't continue
+            if (dist > this.range) {
+                // out of range, point forward
+                if (this.side === 'right') {
+                    this.angle = 0
+                } else {
+                    this.angle = Math.PI
+                }
+                return;
+            }
+
+            // Point towards player, basic tracking logic
+            this.angle = Math.atan2(dy, dx);
+
+            // limit the angles depending the location
+            let can_shoot = false; // can we fire?
             if (this.side === 'right') {
-                this.angle = 0
-            } else {
-                this.angle = Math.PI
-            }
-            this.updateBullets(map, ship); // always draw any remaining bullets
-            return;
-        }
+                // as long as the ship is on the correct side of this turret
+                if (ship.x > this.x) {
+                    if (this.angle < -0.8) // angle limit 1
+                        this.angle = -0.8
+                    else
+                        can_shoot = true
 
-        // Point towards player, basic tracking logic
-        this.angle = Math.atan2(dy, dx);
-
-        // limit the angles depending the location
-        let can_shoot = false; // can we fire?
-        if (this.side === 'right') {
-            // as long as the ship is on the correct side of this turret
-            if (ship.x > this.x) {
-                if (this.angle < -0.8) // angle limit 1
-                    this.angle = -0.8
-                else
-                    can_shoot = true
-
-                if (this.angle > 0.8) // angle limit 2
-                    this.angle = 0.8
-                else
-                    can_shoot = true
-
-            } else {
-                // otherwise - just point forward, and don't shoot (the player is on the wrong side of the turret)
-                this.angle = 0
-            }
-
-        } else {
-
-            // the ship is on the correct side of this turret
-            if (ship.x < this.x) {
-                // ship above the turret
-                if (this.y > ship.y) {
-                    if (this.angle > -1.3) // limit the turret range
-                        this.angle = -1.3
+                    if (this.angle > 0.8) // angle limit 2
+                        this.angle = 0.8
                     else
                         can_shoot = true
 
                 } else {
-                    if (this.angle < 1.3)
-                        this.angle = 1.3
-                    else
-                        can_shoot = true
+                    // otherwise - just point forward, and don't shoot (the player is on the wrong side of the turret)
+                    this.angle = 0
                 }
 
             } else {
-                // just point forward (the player is on the wrong side of the turret)
-                this.angle = Math.PI;
+
+                // the ship is on the correct side of this turret
+                if (ship.x < this.x) {
+                    // ship above the turret
+                    if (this.y > ship.y) {
+                        if (this.angle > -1.3) // limit the turret range
+                            this.angle = -1.3
+                        else
+                            can_shoot = true
+
+                    } else {
+                        if (this.angle < 1.3)
+                            this.angle = 1.3
+                        else
+                            can_shoot = true
+                    }
+
+                } else {
+                    // just point forward (the player is on the wrong side of the turret)
+                    this.angle = Math.PI;
+                }
+
             }
 
-        }
+            // Fire if cooled down and we can shoot, and the player is still alive
+            if (this.fireCooldown === 0 && can_shoot && !gameOver && !this.destroyed) {
+                this.fire();
+                this.fireCooldown = this.cool_down; // only fire every few frames
+            }
 
-        // Fire if cooled down and we can shoot, and the player is still alive
-        if (this.fireCooldown === 0 && can_shoot && !gameOver) {
-            this.fire();
-            this.fireCooldown = this.cool_down; // only fire every few frames
-        }
+        } // if ! destroyed
 
-        // draw the bullets for this turret
-        this.updateBullets(map, ship)
+    }
+
+    /**
+     * the turret explodes
+     */
+    createExplosion() {
+        this.destroyed = true;
+        for (let i = 0; i < 25; i++) {
+            this.particles.push({
+                x: this.x,
+                y: this.y,
+                vx: (Math.random() - 0.5) * 10, // Random blast direction
+                vy: (Math.random() - 0.5) * 10,
+                life: 1.0,      // Opacity/Life starts at 100%
+                decay: 0.02 + Math.random() * 0.03,
+                color: Math.random() > 0.5 ? '#fff' : '#f80' // White and Orange sparks
+            });
+        }
     }
 
     /**
@@ -136,6 +170,18 @@ class Turret {
     }
 
     /**
+     * update turret's explosion particle system
+     */
+    updateParticles() {
+        this.particles = this.particles.filter(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= p.decay;
+            return p.life > 0;
+        });
+    }
+
+    /**
      * a turret decides to shoot
      */
     fire() {
@@ -154,6 +200,11 @@ class Turret {
      * @param ctx the HTML context
      */
     draw(ctx) {
+        this.drawBullets(ctx);
+        this.drawParticles(ctx);
+
+        if (this.destroyed) return;
+
         // Draw the turret barrel first
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -179,8 +230,19 @@ class Turret {
         ctx.closePath();
         ctx.fill();
         ctx.restore();
+    }
 
-        this.drawBullets(ctx);
+    /**
+     * the turret's explosion
+     * @param ctx the HTML drawing context
+     */
+    drawParticles(ctx) {
+        this.particles.forEach(p => {
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, 3, 3);
+        });
+        ctx.globalAlpha = 1.0; // Reset alpha for other drawing
     }
 
     /**
@@ -188,7 +250,6 @@ class Turret {
      * @param ctx the HTML context
      */
     drawBullets(ctx) {
-
         this.bullets.forEach(b => {
             ctx.save();
             ctx.translate(b.x, b.y);
