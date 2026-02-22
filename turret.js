@@ -19,6 +19,8 @@ class Turret {
         this.speed = 5;             // bullet speed
         this.cool_down = 10;        // how many frame before can fire again
         this.bullets = [];          // the turret's bullets
+        this.tileX = tileX;         // keep track of its tile position
+        this.tileY = tileY;
     }
 
     /**

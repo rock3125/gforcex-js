@@ -9,8 +9,10 @@ class Orb {
         this.y = tileY * TILE_SIZE + TILE_SIZE / 2;
         this.baseY = this.y;
         this.angle = Math.random() * Math.PI * 2; // random start phase
-        this.collected = false; // collected by player?
-        this.size = 12; // size of the object
+        this.collected = false;     // collected by player?
+        this.size = 12;             // size of the object
+        this.tileX = tileX;         // keep track of its tile position
+        this.tileY = tileY;
     }
 
     /**

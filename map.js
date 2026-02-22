@@ -74,7 +74,7 @@ class Map {
                     // not on top of another turret
                     let existing = false;
                     for (let ti = 0; ti < this.turret.length && !existing; ti++) {
-                        if (this.turret[ti].x === x && this.turret[ti].y === y) {
+                        if (this.turret[ti].tileX === x && this.turret[ti].tileY === y) {
                             existing = true;
                         }
                     }
@@ -121,8 +121,8 @@ class Map {
                     // can't be next to a turret either
                     let smallest = 1000.0
                     for (let ti = 0; ti < this.turret.length; ti++) {
-                        const dx = this.turret[ti].x - x;
-                        const dy = this.turret[ti].y - y;
+                        const dx = this.turret[ti].tileX - x;
+                        const dy = this.turret[ti].tileY - y;
                         const distance = Math.sqrt(dx * dx + dy * dy)
                         if (distance < smallest) {
                             smallest = distance;
@@ -133,7 +133,7 @@ class Map {
                     // not on top of another orb
                     let existing = false;
                     for (let ti = 0; ti < this.orbs.length && !existing; ti++) {
-                        if (this.orbs[ti].x === x && this.orbs[ti].y === y) {
+                        if (this.orbs[ti].tileX === x && this.orbs[ti].tileY === y) {
                             existing = true;
                         }
                     }
