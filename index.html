@@ -43,7 +43,11 @@
     let keys = {};
     let gameOver = false;
     const ship = new Ship();
-    const map = new Map(4, 10); // num turrets, num orbs
+
+    // set up a map with turrets and orbs
+    let num_turrets = 4;
+    let num_orbs = 10;
+    let map = new Map(num_turrets, num_orbs);
 
     function restart() {
         gameOver = false;
@@ -87,10 +91,19 @@
             // reset the level, and carry across our score to the next level
             const old_score = ship.score + NEXT_LEVEL_SCORE;   // score for reaching the next level
             const old_lives = ship.lives + 1;       // 1 extra live
+
+            // create the next level
+            num_turrets += 2; // two more turrets
+            num_orbs += 2;    // and two more orbs
+            map = new Map(num_turrets, num_orbs);
+
             restart();
+
+            // keep score and lives as set above
             ship.score = old_score;
             ship.lives = old_lives;
-        }, 1500);
+
+        }, 3500);
     }
 
     function update() {
