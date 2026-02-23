@@ -16,6 +16,9 @@ class Player {
         this.thrustSound.volume = 0.2;
         this.thrustSound.loop = true;
 
+        this.landSound = new Audio('./resources/pizzicato.mp3');
+        this.landSound.volume = 0.2;
+
         this.firePool = [];
         this.firePoolCurrent = 0;
         for (let i = 0; i < POOL_SIZE; i++) {
@@ -59,15 +62,6 @@ class Player {
         } else {
             // Otherwise, wait for the event
             this.title_track.addEventListener('canplaythrough', startPlaying, {once: true});
-        }
-    }
-
-    /**
-     * pause the music track
-     */
-    stop_title_track() {
-        if (this.title_track) {
-            this.title_track.pause();
         }
     }
 
@@ -124,6 +118,14 @@ class Player {
             this.thrustSound.pause();
             this.thrustSound.currentTime = 0;
         }
+    }
+
+    /**
+     * the ship lands
+     */
+    land() {
+        this.landSound.currentTime = 0;
+        this.landSound.play().catch(e => {});
     }
 
     /**

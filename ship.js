@@ -370,6 +370,7 @@ class Ship {
             // land or game over?
             if (gx === this.home_x && gy === this.home_y && angle_deg > 250 && angle_deg < 290) {
                 this.land();
+                player.land();
             } else if (gx === this.end_x && gy === this.end_y && angle_deg > 250 && angle_deg < 290) {
                 this.landNextLevel();
                 triggerNextLevel(); // next level
