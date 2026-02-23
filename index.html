@@ -76,13 +76,15 @@
 
     /**
      * you lose / crash / ran out of fuel
+     * @param player the sound player
      */
-    function triggerGameOver() {
+    function triggerGameOver(player) {
         if (gameOver) return;
         gameOver = true;
 
         // Launch the particles at the ship's current location
         ship.createExplosion();
+        if (player) player.play_explosion();
         ship.lives -= 1
 
         setTimeout(() => {
@@ -131,7 +133,7 @@
      */
     function update() {
         ship.update(map, keys, player);
-        map.update(ship);
+        map.update(ship, player);
         player.sound_check_keys(keys);
         if (gameOver && ship.lives <= 0) {
             document.getElementById('gameOver').style.display = 'block'

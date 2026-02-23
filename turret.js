@@ -29,13 +29,14 @@ class Turret {
      * turret logic
      * @param map turret bullet collision detection
      * @param ship the player to look for
+     * @param player the sound player
      */
-    update(map, ship) {
+    update(map, ship, player) {
         if (this.fireCooldown > 0) this.fireCooldown--;
 
         // update any particles
         this.updateParticles();
-        this.updateBullets(map, ship);
+        this.updateBullets(map, ship, player);
 
         // does the ship hit the turret with its weapons?
         if (!this.destroyed) {
@@ -45,6 +46,7 @@ class Turret {
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < 12) {
                     this.createExplosion();
+                    player.play_explosion();
                 }
             }
 
@@ -115,6 +117,7 @@ class Turret {
             // Fire if cooled down and we can shoot, and the player is still alive
             if (this.fireCooldown === 0 && can_shoot && !gameOver && !this.destroyed) {
                 this.fire();
+                player.turret_shoot();
                 this.fireCooldown = this.cool_down; // only fire every few frames
             }
 
@@ -144,8 +147,9 @@ class Turret {
      * move the bullets across the map
      * @param map the map collision detection
      * @param ship player collision detection
+     * @param player the player of sounds
      */
-    updateBullets(map, ship) {
+    updateBullets(map, ship, player) {
         this.bullets = this.bullets.filter(b => {
             // move the bullet
             b.x += b.vx;
@@ -156,7 +160,7 @@ class Turret {
             const dx = b.x - ship.x;
             const dy = b.y - ship.y;
             if (Math.sqrt(dx*dx + dy*dy) < ship.size) {
-                triggerGameOver();
+                triggerGameOver(player);
                 return false;
             }
 

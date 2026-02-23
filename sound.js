@@ -8,6 +8,25 @@ class Player {
         // default music on or off?
         this.music_on = get_cookie("title_music") === "" || get_cookie("title_music") === "on";
         this.music_down = 0; // music key down count frame counter
+
+        this.explosionSound = new Audio('./resources/gong.mp3');
+        this.explosionSound.volume = 0.7;
+
+        this.firePool = [];
+        this.firePoolCurrent = 0;
+        for (let i = 0; i < POOL_SIZE; i++) {
+            const snd = new Audio('./resources/woodblock.mp3');
+            snd.volume = 0.3;
+            this.firePool.push(snd);
+        }
+
+        this.turretFirePool = [];
+        this.turretFirePoolCurrent = 0;
+        for (let i = 0; i < POOL_SIZE; i++) {
+            const snd = new Audio('./resources/timpany.mp3');
+            snd.volume = 0.3;
+            this.turretFirePool.push(snd);
+        }
     }
 
     /**
@@ -46,6 +65,37 @@ class Player {
         if (this.title_track) {
             this.title_track.pause();
         }
+    }
+
+    /**
+     * something explodes
+     */
+    play_explosion() {
+        // Play the sound
+        this.explosionSound.currentTime = 0;
+        // Slightly randomize pitch so every death sounds different
+        this.explosionSound.playbackRate = 0.8 + Math.random() * 0.4;
+        this.explosionSound.play().catch(e => {});
+    }
+
+    /**
+     * player shoots
+     */
+    play_shoot() {
+        const snd = this.firePool[this.firePoolCurrent];
+        snd.currentTime = 0; // Reset to start
+        snd.play().catch(e => {});
+        this.firePoolCurrent = (this.firePoolCurrent + 1) % POOL_SIZE;
+    }
+
+    /**
+     * a turret shoots
+     */
+    turret_shoot() {
+        const snd = this.turretFirePool[this.turretFirePoolCurrent];
+        snd.currentTime = 0; // Reset to start
+        snd.play().catch(e => {});
+        this.turretFirePoolCurrent = (this.turretFirePoolCurrent + 1) % POOL_SIZE;
     }
 
     /**

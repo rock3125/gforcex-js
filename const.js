@@ -46,3 +46,6 @@ const MAX_AMMO = 1000;              // maximum number of ammo
 const MAX_BULLETS_AT_ONCE = 100;    // maximum number of bullets fired at once
 const AMMO_SPEED = 8;               // speed of bullets
 const AMMO_TTL = 100;               // how long the bullets last
+
+// sound constants
+const POOL_SIZE = 10;               // repeated sound pool size

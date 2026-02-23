@@ -239,11 +239,12 @@ class Map {
     /**
      * update logic for all turrets and orbs relative to the ship
      * @param ship the player
+     * @param player the sound system
      */
-    update(ship) {
+    update(ship, player) {
         // Turrets
         this.turret.forEach(t => {
-            t.update(this, ship);
+            t.update(this, ship, player);
         });
         // Orbs
         this.orbs.forEach(orb => {

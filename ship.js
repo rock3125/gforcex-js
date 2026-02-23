@@ -53,8 +53,9 @@ class Ship {
 
     /**
      * the player shoots
+     * @param player the sound system
      */
-    fire() {
+    fire(player) {
         if (this.bullets.length >= MAX_BULLETS_AT_ONCE) return; // at maximum
         if (this.ammo <= 0) return; // out of ammo
 
@@ -68,6 +69,7 @@ class Ship {
             vy: Math.sin(this.angle) * AMMO_SPEED + this.vy,
             ttl: AMMO_TTL
         });
+        player.play_shoot();
     }
 
     /**
@@ -292,7 +294,7 @@ class Ship {
             this.fuel -= FUEL_CONSUMPTION;
         }
         if (keys['Space'] && !gameOver) {
-            this.fire();
+            this.fire(player);
         }
     }
 
@@ -335,7 +337,7 @@ class Ship {
             setTimeout(() => {
                 // still not landed after the timeout?
                 if (!this.landed && this.fuel <= 0.0) {
-                    triggerGameOver()
+                    triggerGameOver(player);
                 }
             }, 1500);
         }
@@ -363,7 +365,7 @@ class Ship {
                 this.landNextLevel();
                 triggerNextLevel(); // next level
             } else {
-                triggerGameOver(); // crash!
+                triggerGameOver(player); // crash!
             }
         }
     }
