@@ -335,6 +335,9 @@ class Map {
         // restore drawing context
         ctx.restore();
 
+        // draw a darkened vignette across the whole
+        this.drawVignette(ctx);
+
         // Update Minimap Player Dot
         this.drawMinimap(mCtx, ship);
 
@@ -344,6 +347,24 @@ class Map {
         ship.drawLives(LIVES_X, LIVES_Y);
     }
 
+    /**
+     * darken the screen radially inward
+     * @param ctx the HTML context
+     */
+    drawVignette(ctx) {
+        ctx.save();
+        // Use 'multiply' or 'destination-in' to darken edges
+        const gradient = ctx.createRadialGradient(
+            canvas.width/2, canvas.height/2, canvas.height/4,
+            canvas.width/2, canvas.height/2, canvas.width/1.2
+        );
+        gradient.addColorStop(0, 'rgba(0,0,0,0)');     // Clear center
+        gradient.addColorStop(1, 'rgba(0,0,0,0.8)');   // Dark edges
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+    }
 
     drawWater(ctx) {
         ctx.save();
