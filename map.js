@@ -12,6 +12,9 @@ class Map {
         this.num_turrets = num_turrets;     // number of turrets in the world initially
         this.orbs = [];                     // orb class items
         this.num_orbs = num_orbs;           // number of orbs in the world initially
+        this.water_time = 0;                // water offset for shimmer effect
+        this.water_bubbles = [];            // bubbles under-water
+        this.initBubbles();
     }
 
 
@@ -147,6 +150,23 @@ class Map {
     }
 
     /**
+     * Initialize bubbles with varying speeds and depths
+     */
+    initBubbles() {
+        for (let i = 0; i < BUBBLE_COUNT; i++) {
+            this.water_bubbles.push({
+                x: Math.random() * WORLD_SIZE,
+                y: WATER_Y + Math.random() * (WORLD_SIZE - WATER_Y),
+                speed: 0.5 + Math.random() * 1.5,
+                wobbleSpeed: 0.02 + Math.random() * 0.05,
+                wobbleWidth: 2 + Math.random() * 5,
+                size: 1 + Math.random() * 3,
+                opacity: 0.1 + Math.random() * 0.4
+            });
+        }
+    }
+
+    /**
      * traverse the cave system and make sure adjacent holes connect, creating an intricate
      * connected cave system
      */
@@ -229,6 +249,8 @@ class Map {
         this.orbs.forEach(orb => {
             orb.update(ship);
         });
+        // shimmer the water
+        this.water_time += 0.05
     }
 
     /**
@@ -265,8 +287,9 @@ class Map {
         ctx.translate(camX, camY);
 
         // draw the water (with opacity)
-        ctx.fillStyle = 'rgba(0, 50, 200, 0.2)';
-        ctx.fillRect(0, WATER_Y, WORLD_SIZE, WORLD_SIZE - WATER_Y);
+        // ctx.fillStyle = 'rgba(0, 50, 200, 0.2)';
+        // ctx.fillRect(0, WATER_Y, WORLD_SIZE, WORLD_SIZE - WATER_Y);
+        this.drawWater(ctx);
 
         // draw the terrain / map itself, the blocks
         for (let x = 0; x < GRID_RES; x++) {
@@ -319,6 +342,76 @@ class Map {
         ship.drawFuelGauge(ctx);
         ship.drawAmmoGauge(ctx);
         ship.drawLives(LIVES_X, LIVES_Y);
+    }
+
+
+    drawWater(ctx) {
+        ctx.save();
+
+        // Create a "shimmer" gradient
+        const shimmerOffset = Math.sin(this.water_time * 0.5) * 50;
+        const gradient = ctx.createLinearGradient(0, WATER_Y + shimmerOffset, 0, WORLD_SIZE);
+
+        gradient.addColorStop(0, 'rgba(0, 180, 255, 0.4)'); // Surface light
+        gradient.addColorStop(0.1, 'rgba(0, 80, 200, 0.3)'); // Mid depth
+        gradient.addColorStop(1, 'rgba(0, 20, 50, 0.6)');    // Deep dark
+
+        ctx.fillStyle = gradient;
+
+        // 2. Draw the waving surface
+        ctx.beginPath();
+        ctx.moveTo(0, WORLD_SIZE); // Bottom left
+        ctx.lineTo(0, WATER_Y);     // Start of water level
+
+        // Draw the wavy top line
+        for (let x = 0; x <= WORLD_SIZE; x += 50) {
+            // Combine two sine waves for a more "organic" jagged shimmer
+            const wave1 = Math.sin(x * 0.01 + this.water_time) * 5;
+            const wave2 = Math.sin(x * 0.02 + this.water_time * 0.8) * 3;
+            ctx.lineTo(x, WATER_Y + wave1 + wave2);
+        }
+
+        ctx.lineTo(WORLD_SIZE, WATER_Y);
+        ctx.lineTo(WORLD_SIZE, WORLD_SIZE);
+        ctx.closePath();
+        ctx.fill();
+
+        // 3. Add a "Surface Sparkle" line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.stroke(); // This draws the top wavy line we just defined
+
+        ctx.restore();
+
+        // draw the under-water bubbles
+        ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+        this.water_bubbles.forEach(b => {
+            // Move Upward (Buoyancy)
+            b.y -= b.speed;
+
+            // Sinusoidal Wobble (Side-to-side movement)
+            const currentWobble = Math.sin(b.y * b.wobbleSpeed) * b.wobbleWidth;
+
+            // Reset if they hit the surface (WATER_Y)
+            if (b.y < WATER_Y) {
+                b.y = WORLD_SIZE; // Send back to the bottom
+                b.x = Math.random() * WORLD_SIZE; // Randomize horizontal start
+            }
+
+            // 4. Draw with a "High-Light" effect
+            // Instead of a flat circle, we draw a tiny white arc to simulate a reflection
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(255, 255, 255, ${b.opacity})`;
+            ctx.lineWidth = 1;
+            ctx.arc(b.x + currentWobble, b.y, b.size, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Add a tiny "glint" (the highlight on the bubble)
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(255, 255, 255, ${b.opacity + 0.2})`;
+            ctx.arc(b.x + currentWobble - b.size/3, b.y - b.size/3, b.size/4, 0, Math.PI * 2);
+            ctx.fill();
+        });
     }
 
 }

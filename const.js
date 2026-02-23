@@ -4,6 +4,7 @@ const GRID_RES = 30;                        // size of each tile in the world
 const WORLD_SIZE = 3000;                    // the entire size of the world
 const TILE_SIZE = WORLD_SIZE / GRID_RES;    // 100px per tile
 const WATER_Y = WORLD_SIZE * 0.6;           // water top level
+const BUBBLE_COUNT = 60;                    // number of bubbles in the water
 
 // --- Physics ---
 const GRAVITY = 0.075;                  // downwards pressure on flying
