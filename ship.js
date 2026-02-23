@@ -229,9 +229,11 @@ class Ship {
 
     /**
      * player scores for collecting an orb
+     * @param player the sound player
      */
-    collectOrb() {
+    collectOrb(player) {
         this.score += ORB_SCORE // orbs collect
+        player.collect_orb();
     }
 
     /**

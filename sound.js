@@ -19,6 +19,9 @@ class Player {
         this.landSound = new Audio('./resources/pizzicato.mp3');
         this.landSound.volume = 0.2;
 
+        this.orbSound = new Audio('./resources/glissando.mp3');
+        this.orbSound.volume = 0.2;
+
         this.firePool = [];
         this.firePoolCurrent = 0;
         for (let i = 0; i < POOL_SIZE; i++) {
@@ -126,6 +129,14 @@ class Player {
     land() {
         this.landSound.currentTime = 0;
         this.landSound.play().catch(e => {});
+    }
+
+    /**
+     * a user collects an orb
+     */
+    collect_orb() {
+        this.orbSound.currentTime = 0;
+        this.orbSound.play().catch(e => {});
     }
 
     /**

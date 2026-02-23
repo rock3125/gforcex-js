@@ -248,7 +248,7 @@ class Map {
         });
         // Orbs
         this.orbs.forEach(orb => {
-            orb.update(ship);
+            orb.update(ship, player);
         });
         // shimmer the water
         this.water_time += 0.05

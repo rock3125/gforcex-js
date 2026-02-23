@@ -18,8 +18,9 @@ class Orb {
     /**
      * perform orb logic
      * @param ship the player (distance for collect)
+     * @param player the sound player
      */
-    update(ship) {
+    update(ship, player) {
         // floating animation
         this.angle += 0.05;
         this.y = this.baseY + Math.sin(this.angle) * 10;
@@ -30,18 +31,19 @@ class Orb {
         const dist = Math.sqrt(dx * dx + dy * dy);
         // do we collect this orb?  get the point?
         if (dist < this.size + ship.size) {
-            this.collect(ship);
+            this.collect(ship, player);
         }
     }
 
     /**
      * the player collects an orb
      * @param ship the player
+     * @param player the sound player
      */
-    collect(ship) {
+    collect(ship, player) {
         if (this.collected) return; // already collected, don't process again
         this.collected = true;
-        ship.collectOrb();
+        ship.collectOrb(player);
     }
 
     /**
