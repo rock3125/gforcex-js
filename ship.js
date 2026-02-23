@@ -271,6 +271,7 @@ class Ship {
      * @param player optional a music player to check
      */
     checkKeys(keys, player) {
+        let play_thrust = false;
         if (keys['ArrowLeft'] && this.fuel > 0.0) {
             this.angle -= this.rotationSpeed;
             this.fuel -= FUEL_CONSUMPTION;
@@ -287,11 +288,19 @@ class Ship {
 
                 // start the soundtrack the first time we take-off
                 if (player) player.play_title_track();
+                play_thrust = true;
 
             } else {
                 this.vy += Math.sin(this.angle) * this.thrust;
+                play_thrust = true;
             }
             this.fuel -= FUEL_CONSUMPTION;
+        }
+        // play the sound
+        if (play_thrust) {
+            player.thrust_down(ship.vx, ship.vy);
+        } else {
+            player.thrust_stop();
         }
         if (keys['Space'] && !gameOver) {
             this.fire(player);

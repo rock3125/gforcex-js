@@ -12,6 +12,10 @@ class Player {
         this.explosionSound = new Audio('./resources/gong.mp3');
         this.explosionSound.volume = 0.7;
 
+        this.thrustSound = new Audio('./resources/drone.mp3');
+        this.thrustSound.volume = 0.2;
+        this.thrustSound.loop = true;
+
         this.firePool = [];
         this.firePoolCurrent = 0;
         for (let i = 0; i < POOL_SIZE; i++) {
@@ -96,6 +100,30 @@ class Player {
         snd.currentTime = 0; // Reset to start
         snd.play().catch(e => {});
         this.turretFirePoolCurrent = (this.turretFirePoolCurrent + 1) % POOL_SIZE;
+    }
+
+    /**
+     * play thruster sound
+     * @param vx speed in x direction
+     * @param vy speed in y direction
+     */
+    thrust_down(vx, vy) {
+        if (this.thrustSound.paused) {
+            this.thrustSound.play().catch(e => {});
+        }
+        // Make the engine sound higher pitched as you go faster
+        const speed = Math.sqrt(vx * vx + vy * vy);
+        this.thrustSound.playbackRate = 1.0 + (speed * 0.05);
+    }
+
+    /**
+     * stop the ship's thruster
+     */
+    thrust_stop() {
+        if (!this.thrustSound.paused) {
+            this.thrustSound.pause();
+            this.thrustSound.currentTime = 0;
+        }
     }
 
     /**
