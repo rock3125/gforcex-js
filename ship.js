@@ -362,8 +362,8 @@ class Ship {
         this.updateBullets(map);
         this.updateParticles();
 
-        // landing angle
-        const angle_deg = (360 + (Math.ceil(this.angle * RAD_2_DEG))) % 360;
+        // landing angle between 0 and 360 degrees
+        const angle_deg = (360 + (Math.ceil((this.angle % (2 *Math.PI)) * RAD_2_DEG))) % 360;
 
         // collision or land
         const gx = Math.floor(this.x / TILE_SIZE);
