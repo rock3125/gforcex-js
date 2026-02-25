@@ -117,7 +117,13 @@
 
             // create the next level
             num_turrets += 2; // two more turrets
+            if (num_turrets > 10) {
+                num_turrets = 10;
+            }
             num_orbs += 2;    // and two more orbs
+            if (num_orbs > 10) {
+                num_orbs = 10;
+            }
             map = new Map(num_turrets, num_orbs);
 
             restart();

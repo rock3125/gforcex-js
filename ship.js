@@ -299,7 +299,7 @@ class Ship {
             this.fuel -= FUEL_CONSUMPTION;
         }
         // play the sound
-        if (play_thrust) {
+        if (play_thrust && !gameOver) {
             player.thrust_down(ship.vx, ship.vy);
         } else {
             player.thrust_stop();
