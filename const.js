@@ -39,6 +39,8 @@ const AMMO_WIDTH = 100
 // the mini-ship number of lives start display
 const LIVES_X = 80
 const LIVES_Y = 138
+const ORBS_X = 80
+const ORBS_Y = 158
 
 // ammo constants
 const REARM_SPEED = 5;              // how fast we re-arm on the launchpad

@@ -346,6 +346,7 @@ class Map {
         ship.drawFuelGauge(ctx);
         ship.drawAmmoGauge(ctx);
         ship.drawLives(LIVES_X, LIVES_Y);
+        this.drawOrbs(ctx, ORBS_X, ORBS_Y);
     }
 
     /**
@@ -434,6 +435,26 @@ class Map {
             ctx.arc(b.x + currentWobble - b.size/3, b.y - b.size/3, b.size/4, 0, Math.PI * 2);
             ctx.fill();
         });
+    }
+
+    // draw the map's orbs
+    drawOrbs(ctx, x, y) {
+        ctx.save();
+        ctx.translate(x, y)
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+
+        // draw all orbs
+        this.orbs.forEach(orb => {
+            if (!orb.collected) {
+                ctx.translate(16, 0);
+                ctx.beginPath(); // Begin a new path
+                ctx.arc(0, 0, 5, 0.0, Math.PI * 2);
+                ctx.stroke();
+            }
+        });
+
+        ctx.restore();
     }
 
 }
