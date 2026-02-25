@@ -363,17 +363,17 @@ class Ship {
         this.updateParticles();
 
         // landing angle
-        const angle_deg = 360 + (Math.ceil(this.angle * RAD_2_DEG) % 360);
+        const angle_deg = (360 + (Math.ceil(this.angle * RAD_2_DEG))) % 360;
 
         // collision or land
         const gx = Math.floor(this.x / TILE_SIZE);
         const gy = Math.floor(this.y / TILE_SIZE);
         if (gx < 0 || gx >= GRID_RES || gy < 0 || gy >= GRID_RES || map.grid[gx][gy] === 1) {
             // land or game over?
-            if (gx === this.home_x && gy === this.home_y && angle_deg > 250 && angle_deg < 290) {
+            if (gx === this.home_x && gy === this.home_y && angle_deg > 230 && angle_deg < 310) {
                 this.land();
                 player.land();
-            } else if (gx === this.end_x && gy === this.end_y && angle_deg > 250 && angle_deg < 290) {
+            } else if (gx === this.end_x && gy === this.end_y && angle_deg > 230 && angle_deg < 310) {
                 this.landNextLevel();
                 triggerNextLevel(); // next level
             } else {
