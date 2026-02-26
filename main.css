@@ -51,6 +51,8 @@ canvas {
     pointer-events: none;
 }
 
+/* display items */
+
 #minimap {
     position: absolute;
     bottom: 20px;

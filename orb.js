@@ -5,9 +5,9 @@
 class Orb {
     // create an orb at (x,y)
     constructor(tileX, tileY) {
-        this.x = tileX * TILE_SIZE + TILE_SIZE / 2;
+        this.x = tileX * TILE_SIZE + TILE_SIZE / 2; // ORB location in world coordinates
         this.y = tileY * TILE_SIZE + TILE_SIZE / 2;
-        this.baseY = this.y;
+        this.baseY = this.y; // the bottom of the orb - a const reference so we can move it up/down
         this.angle = Math.random() * Math.PI * 2; // random start phase
         this.collected = false;     // collected by player?
         this.size = 12;             // size of the object
@@ -47,7 +47,7 @@ class Orb {
     }
 
     /**
-     * draw the orb
+     * draw an orb
      * @param ctx the drawing context
      */
     draw(ctx) {

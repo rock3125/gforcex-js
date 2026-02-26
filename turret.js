@@ -44,7 +44,7 @@ class Turret {
                 const dx = ship.bullets[i].x - this.x;
                 const dy = ship.bullets[i].y - this.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 12) {
+                if (dist < 12) { // within range?
                     this.createExplosion();
                     player.play_explosion();
                 }
@@ -95,7 +95,7 @@ class Turret {
                 if (ship.x < this.x) {
                     // ship above the turret
                     if (this.y > ship.y) {
-                        if (this.angle > -1.3) // limit the turret range
+                        if (this.angle > -1.3) // limit the turret range in radians
                             this.angle = -1.3
                         else
                             can_shoot = true
@@ -114,7 +114,7 @@ class Turret {
 
             }
 
-            // Fire if cooled down and we can shoot, and the player is still alive
+            // Fire if cooled down, and we can shoot, and the player is still alive
             if (this.fireCooldown === 0 && can_shoot && !gameOver && !this.destroyed) {
                 this.fire();
                 player.turret_shoot();

@@ -317,8 +317,9 @@ class Ship {
      */
     update(map, keys, player) {
 
-        this.checkKeys(keys, player);
+        this.checkKeys(keys, player); // keyboard reader
 
+        // determine what the gravity should be - upwards or downwards
         const inWater = this.y > WATER_Y;
         this.vy += inWater ? BUOYANCY : GRAVITY;
         this.vx *= (inWater ? WATER_DRAG : AIR_DRAG);
@@ -326,9 +327,9 @@ class Ship {
 
         // landed - no speed
         if (this.landed) {
-            this.vx = 0.0; // speed off
+            this.vx = 0.0; // speed 0 in all directions, we have landed
             this.vy = 0.0;
-            this.angle = -Math.PI / 2; // point up
+            this.angle = -Math.PI / 2; // point ship upwards
             if (this.fuel < MAX_FUEL) { // start refueling if needed
                 this.fuel += REFUEL_SPEED;
                 if (this.fuel > MAX_FUEL) {
@@ -359,7 +360,9 @@ class Ship {
             this.y += this.vy;
         }
 
+        // update player's bullet/fire logic
         this.updateBullets(map);
+        // update player explosion if applicable
         this.updateParticles();
 
         // landing angle between 0 and 360 degrees
@@ -369,21 +372,23 @@ class Ship {
         const gx = Math.floor(this.x / TILE_SIZE);
         const gy = Math.floor(this.y / TILE_SIZE);
         if (gx < 0 || gx >= GRID_RES || gy < 0 || gy >= GRID_RES || map.grid[gx][gy] === 1) {
-            // land or game over?
+            // are we landing on the home-block?
             if (gx === this.home_x && gy === this.home_y && angle_deg > 230 && angle_deg < 310) {
                 this.land();
                 player.land();
             } else if (gx === this.end_x && gy === this.end_y && angle_deg > 230 && angle_deg < 310) {
+                // are we landing on the end-level block?
                 this.landNextLevel();
                 triggerNextLevel(); // next level
             } else {
+                // we can't survive a collision with any other block
                 triggerGameOver(player); // crash!
             }
         }
     }
 
     /**
-     * draw the ship
+     * draw the player's ship
      * @param ctx the HTML drawing context
      */
     draw(ctx) {
@@ -407,8 +412,13 @@ class Ship {
     }
 
 
-    // draw the ship's lives
-    drawLives(x, y) {
+    /**
+     * draw the ship's lives (a simple ship upright outline)
+     * @param ctx the HTML context to draw into
+     * @param x x-position of ship lives display
+     * @param y y-position of ship lives display
+     */
+    drawLives(ctx, x, y) {
         if (this.lives <= 0) return
 
         ctx.save();

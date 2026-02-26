@@ -9,19 +9,24 @@ class Player {
         this.music_on = get_cookie("title_music") === "" || get_cookie("title_music") === "on";
         this.music_down = 0; // music key down count frame counter
 
+        // exploding things make this sound (turrets and player)
         this.explosionSound = new Audio('./resources/gong.mp3');
         this.explosionSound.volume = 0.7;
 
+        // player's engine sound
         this.thrustSound = new Audio('./resources/drone.mp3');
         this.thrustSound.volume = 0.2;
         this.thrustSound.loop = true;
 
+        // landing sound
         this.landSound = new Audio('./resources/pizzicato.mp3');
         this.landSound.volume = 0.2;
 
+        // sound for collecting an orb
         this.orbSound = new Audio('./resources/glissando.mp3');
         this.orbSound.volume = 0.2;
 
+        // we have a set of POOL_SIZE items for firing multiple projectiles
         this.firePool = [];
         this.firePoolCurrent = 0;
         for (let i = 0; i < POOL_SIZE; i++) {
@@ -30,6 +35,7 @@ class Player {
             this.firePool.push(snd);
         }
 
+        // we have a set of POOL_SIZE items for firing multiple projectiles for turrets
         this.turretFirePool = [];
         this.turretFirePoolCurrent = 0;
         for (let i = 0; i < POOL_SIZE; i++) {
@@ -48,7 +54,7 @@ class Player {
             this.title_track = new Audio('./resources/the-pearl.mp3'); // the music track we play
             this.title_track.loop = true; // loop forever
             this.title_track.volume = 0.5; // 50% volume
-            // another way of looping
+            // another way of looping - just in case loop above doesn't work
             this.title_track.addEventListener('ended', function () {
                 this.title_track.play().catch(e => console.error("Autoplay blocked:", e));
             }, false);
@@ -72,9 +78,9 @@ class Player {
      * something explodes
      */
     play_explosion() {
-        // Play the sound
+        // Play the sound, starting from the beginning of the track
         this.explosionSound.currentTime = 0;
-        // Slightly randomize pitch so every death sounds different
+        // slightly randomize pitch so every death sounds different
         this.explosionSound.playbackRate = 0.8 + Math.random() * 0.4;
         this.explosionSound.play().catch(e => {});
     }
@@ -83,9 +89,11 @@ class Player {
      * player shoots
      */
     play_shoot() {
+        // grab the next soundtrack
         const snd = this.firePool[this.firePoolCurrent];
-        snd.currentTime = 0; // Reset to start
+        snd.currentTime = 0; // reset to start of soundtrack
         snd.play().catch(e => {});
+        // next slot
         this.firePoolCurrent = (this.firePoolCurrent + 1) % POOL_SIZE;
     }
 
@@ -93,9 +101,11 @@ class Player {
      * a turret shoots
      */
     turret_shoot() {
+        // grab the next soundtrack
         const snd = this.turretFirePool[this.turretFirePoolCurrent];
-        snd.currentTime = 0; // Reset to start
+        snd.currentTime = 0; // reset to start
         snd.play().catch(e => {});
+        // next slot
         this.turretFirePoolCurrent = (this.turretFirePoolCurrent + 1) % POOL_SIZE;
     }
 
@@ -105,10 +115,11 @@ class Player {
      * @param vy speed in y direction
      */
     thrust_down(vx, vy) {
+        // paused? -> just play it
         if (this.thrustSound.paused) {
             this.thrustSound.play().catch(e => {});
         }
-        // Make the engine sound higher pitched as you go faster
+        // Make the engine sound higher pitched as we go faster
         const speed = Math.sqrt(vx * vx + vy * vy);
         this.thrustSound.playbackRate = 1.0 + (speed * 0.05);
     }
@@ -117,6 +128,7 @@ class Player {
      * stop the ship's thruster
      */
     thrust_stop() {
+        // reset sound for ship thrust
         if (!this.thrustSound.paused) {
             this.thrustSound.pause();
             this.thrustSound.currentTime = 0;
@@ -127,6 +139,7 @@ class Player {
      * the ship lands
      */
     land() {
+        // play landing sound
         this.landSound.currentTime = 0;
         this.landSound.play().catch(e => {});
     }
@@ -135,6 +148,7 @@ class Player {
      * a user collects an orb
      */
     collect_orb() {
+        // play orb collection sound
         this.orbSound.currentTime = 0;
         this.orbSound.play().catch(e => {});
     }
@@ -144,12 +158,14 @@ class Player {
      */
     toggle_music() {
         if (this.music_on) {
+            // toggle off
             this.music_on = false
-            set_cookie("title_music", "off", 7)
+            set_cookie("title_music", "off", 7) // set global state
             if (this.title_track) this.title_track.pause();
         } else {
+            // start playing
             this.music_on = true
-            set_cookie("title_music", "on", 7)
+            set_cookie("title_music", "on", 7) // set global state
             if (this.title_track) this.title_track.play();
         }
     }
@@ -157,7 +173,7 @@ class Player {
     // m or M to toggle music
     sound_check_keys(keys) {
         if (keys['KeyM'] && this.music_down === 0) {
-            this.music_down = 15;
+            this.music_down = 15; // frame delay - because the keyboard is a game keyboard
             this.toggle_music();
         } else if (this.music_down > 0) {
             this.music_down -= 1;

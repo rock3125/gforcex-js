@@ -24,13 +24,13 @@ const ORB_SCORE = 1000;                 // 1K per orb
 const NEXT_LEVEL_SCORE_FULL = 10000;    // 10K for next level with all orbs collected
 const NEXT_LEVEL_SCORE = 1000;          // 1K for next level without all orbs collected
 
-// fuel gauge location on screen
+// fuel gauge location on screen (x,y, width, height)
 const FUEL_X = 85;
 const FUEL_Y = 81;
 const FUEL_HEIGHT = 10
 const FUEL_WIDTH = 100
 
-// ammo gauge location on screen
+// ammo gauge location on screen (x, y, width, height)
 const AMMO_X = 85;
 const AMMO_Y = 101;
 const AMMO_HEIGHT = 10
@@ -39,6 +39,8 @@ const AMMO_WIDTH = 100
 // the mini-ship number of lives start display
 const LIVES_X = 80
 const LIVES_Y = 138
+
+// the orb number display
 const ORBS_X = 80
 const ORBS_Y = 158
 
@@ -47,7 +49,7 @@ const REARM_SPEED = 5;              // how fast we re-arm on the launchpad
 const MAX_AMMO = 1000;              // maximum number of ammo
 const MAX_BULLETS_AT_ONCE = 100;    // maximum number of bullets fired at once
 const AMMO_SPEED = 8;               // speed of bullets
-const AMMO_TTL = 100;               // how long the bullets last
+const AMMO_TTL = 100;               // how long the bullets last on the map
 
 // sound constants
 const POOL_SIZE = 10;               // repeated sound pool size

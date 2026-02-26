@@ -345,7 +345,7 @@ class Map {
         // draw heads up display
         ship.drawFuelGauge(ctx);
         ship.drawAmmoGauge(ctx);
-        ship.drawLives(LIVES_X, LIVES_Y);
+        ship.drawLives(ctx, LIVES_X, LIVES_Y);
         this.drawOrbs(ctx, ORBS_X, ORBS_Y);
     }
 
