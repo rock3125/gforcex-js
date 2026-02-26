@@ -1,4 +1,4 @@
-# G-Force X
+# Rock's G-Force X
 
 A high-precision, momentum-based cave navigator built with HTML5 Canvas.
 
@@ -7,15 +7,23 @@ A high-precision, momentum-based cave navigator built with HTML5 Canvas.
 
 ## 🚀 Overview
 
-**G-Force X** is a modern reimagining of classic 2D cave-flyers. You pilot a scout ship through a massive $3000 \times 3000$ pixel cavern. The game features a unique **Dual-Gravity** system:
+**Rock's G-Force X** is a modern reimagining of classic 2D cave-flyers. You pilot a scout ship through a massive $3000 \times 3000$ pixel cavern. The game features a unique **Dual-Gravity** system:
 * **In Air:** Standard gravity pulls you down.
 * **In Water:** Buoyancy pulls you up, accompanied by increased fluid drag.
-* Move to the next level each time for a **10K Bonus**
+* Move to the next level each time for a **1K Bonus** and an extra life
+* Gain a **10K Bonus** for collecting all orbs in a level
 * Collect Magical Orbs for **1K Bonus** each
+* Refuel/Rearm your ship on your home (starting) pad
 * Destroy or Avoid Turrets protecting the cave system
 
 
 The terrain is procedurally generated using **Cellular Automata**, ensuring that every playthrough offers a unique, connected, and organic labyrinth.
+
+![Screenshot 1](resources/screenshot-1.png)
+
+
+![Screenshot 2](resources/screenshot-2.png)
+
 
 ---
 
@@ -49,8 +57,7 @@ The game uses standard keyboard inputs with UTF-8 support for HUD legend display
 
 -   **Language:** JavaScript (ES6+)
 -   **Renderer:** HTML5 Canvas API
--   **World Scale:** $3000 \times 3000$ World Units
--   **Collision Resolution:** $100\text{px}$ Grid Cells
+-   **World Scale:** 3000 x 3000 World Units
 -   **Performance:** Implemented draw-culling (only tiles within the camera viewport are rendered) to maintain a smooth 60 FPS.
 
 ---
