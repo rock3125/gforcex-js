@@ -30,6 +30,14 @@
     <div class="control-item"><span class="key">M</span> <span id="music"> Music on/off</span></div>
     <div id="restart" class="control-item" style="display: none;"><span class="key">R</span> Restart</div>
 </div>
+
+<div id="mobileControls" style="display: none; position: absolute; bottom: 20px; left: 0; width: 100%; height: 150px; pointer-events: none; z-index: 1000;">
+    <div id="joystickZone" style="position: absolute; bottom: 0; left: 20px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none; border: 2px solid rgba(255,255,255,0.3);">
+        <div id="joystickKnob" style="position: absolute; top: 40px; left: 40px; width: 40px; height: 40px; background: rgba(255,255,255,0.5); border-radius: 50%;"></div>
+    </div>
+    <div id="fireButton" style="position: absolute; bottom: 20px; right: 20px; width: 80px; height: 80px; background: rgba(255,0,0,0.3); border-radius: 50%; pointer-events: auto; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-family: sans-serif; touch-action: none; user-select: none; -webkit-user-select: none; border: 2px solid rgba(255,0,0,0.5);">FIRE</div>
+</div>
+
 <canvas id="gameCanvas"></canvas>
 <canvas id="minimap" width="150" height="150"></canvas>
 
@@ -184,6 +192,111 @@
 
     // music cookie (just in case it wasn't yet set)
     set_cookie("title_music", player.music_on ? "on" : "off", 7);
+
+    // --- Mobile Controls Logic ---
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) {
+        document.getElementById('mobileControls').style.display = 'block';
+        document.querySelector('.controls-legend').style.display = 'none';
+
+        const joystickZone = document.getElementById('joystickZone');
+        const joystickKnob = document.getElementById('joystickKnob');
+        const fireButton = document.getElementById('fireButton');
+
+        // Joystick state
+        let joyTouchId = null;
+        let joyCenterX = 0;
+        let joyCenterY = 0;
+        const maxRadius = 40;
+
+        joystickZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (joyTouchId === null) {
+                const touch = e.changedTouches[0];
+                joyTouchId = touch.identifier;
+                const rect = joystickZone.getBoundingClientRect();
+                joyCenterX = rect.left + rect.width / 2;
+                joyCenterY = rect.top + rect.height / 2;
+                updateJoystick(touch.clientX, touch.clientY);
+            }
+        }, { passive: false });
+
+        joystickZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === joyTouchId) {
+                    updateJoystick(touch.clientX, touch.clientY);
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        const resetJoystick = () => {
+            joyTouchId = null;
+            joystickKnob.style.transform = `translate(0px, 0px)`;
+            keys['ArrowLeft'] = false;
+            keys['ArrowRight'] = false;
+            keys['ArrowDown'] = false;
+        };
+
+        joystickZone.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === joyTouchId) {
+                    resetJoystick();
+                    break;
+                }
+            }
+        }, { passive: false });
+
+        joystickZone.addEventListener('touchcancel', resetJoystick);
+
+        function updateJoystick(clientX, clientY) {
+            let dx = clientX - joyCenterX;
+            let dy = clientY - joyCenterY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > maxRadius) {
+                dx = (dx / distance) * maxRadius;
+                dy = (dy / distance) * maxRadius;
+            }
+            
+            joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+
+            // Update keys based on joystick position
+            // Threshold for activation: 15px
+            keys['ArrowLeft'] = dx < -15;
+            keys['ArrowRight'] = dx > 15;
+            // Map either UP or DOWN to thrust since it's an asteroid style game
+            keys['ArrowDown'] = dy < -15 || dy > 15;
+        }
+
+        // Fire Button Logic
+        fireButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys['Space'] = true;
+            fireButton.style.background = 'rgba(255,0,0,0.6)';
+        }, { passive: false });
+
+        const resetFire = (e) => {
+            if (e) e.preventDefault();
+            keys['Space'] = false;
+            fireButton.style.background = 'rgba(255,0,0,0.3)';
+        };
+
+        fireButton.addEventListener('touchend', resetFire, { passive: false });
+        fireButton.addEventListener('touchcancel', resetFire, { passive: false });
+        
+        // Also add restart support by tapping the screen if game over
+        canvas.addEventListener('touchstart', (e) => {
+            if (gameOver && ship.lives <= 0) {
+                keys['KeyR'] = true;
+                setTimeout(() => keys['KeyR'] = false, 100);
+            }
+        }, { passive: false });
+    }
+    // --- End Mobile Controls Logic ---
 
     // restart (first start) game logic
     restart();
