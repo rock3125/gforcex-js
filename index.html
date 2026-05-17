@@ -265,11 +265,11 @@
             joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
 
             // Update keys based on joystick position
-            // Threshold for activation: 15px
-            keys['ArrowLeft'] = dx < -15;
-            keys['ArrowRight'] = dx > 15;
+            // Threshold for activation: 25px (increased from 15px to make it less sensitive)
+            keys['ArrowLeft'] = dx < -25;
+            keys['ArrowRight'] = dx > 25;
             // Map either UP or DOWN to thrust since it's an asteroid style game
-            keys['ArrowDown'] = dy < -15 || dy > 15;
+            keys['ArrowDown'] = dy < -25 || dy > 25;
         }
 
         // Fire Button Logic
