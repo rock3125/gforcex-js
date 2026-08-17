@@ -9,6 +9,8 @@
     <script type="text/javascript" src="map.js"></script>
     <script type="text/javascript" src="ship.js"></script>
     <script type="text/javascript" src="turret.js"></script>
+    <script type="text/javascript" src="nav.js"></script>
+    <script type="text/javascript" src="enemy.js"></script>
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
@@ -52,6 +54,7 @@
     let keys = {};
     let gameOver = false;
     const ship = new Ship();     // you, the player
+    const enemy = new Enemy();   // the AI opponent, flying out of its own base
     const player = new Player(); // audio player
 
     // set up a map with initial turrets and orbs
@@ -70,7 +73,8 @@
         let success = false; // re-create the world until it is right
         while (!success) {
             map.generateWorld();
-            success = ship.reset(map); // returns true if we could place the player
+            // both the player and the enemy need somewhere to launch from
+            success = ship.reset(map) && enemy.reset(map, ship);
             map.placeTurrets(ship)
             map.placeOrbs(ship)
         }
@@ -100,6 +104,7 @@
             gameOver = ship.lives <= 0;
             if (!gameOver) {
                 ship.reset(map);
+                enemy.reset(map, ship); // send the enemy home too, off the respawn point
             }
         }, 1500);
     }
@@ -149,6 +154,7 @@
     function update() {
         ship.update(map, keys, player);
         map.update(ship, player);
+        enemy.update(map, ship, player);
         player.sound_check_keys(keys);
         if (gameOver && ship.lives <= 0) {
             document.getElementById('gameOver').style.display = 'block'
@@ -163,21 +169,56 @@
      * Game main draw loop (all drawing / graphics)
      */
     function draw() {
-        map.draw(ctx, mCtx, ship);
+        map.draw(ctx, mCtx, ship, enemy);
         // set the player's score as a number inside HTML
         score_ctrl.innerText = ship.score.toLocaleString()
     }
 
-    // the main loop running
-    function loop() {
-        update();
-        draw();
+    // real time carried over between logic steps, and the timestamp of the last frame
+    let step_backlog = 0;
+    let last_frame_time = 0;
 
+    /**
+     * the main loop running
+     *
+     * The physics is per-frame, so how often we call update() is exactly how fast the
+     * game plays.  Rather than tie that to the monitor, we bank up the real time that
+     * has passed and spend it in fixed LOGIC_STEP_MS steps - so the game runs at the
+     * same speed on a 60hz laptop and a 144hz monitor, and GAME_SPEED alone decides how
+     * frantic it is.  Left over time stays in the backlog for next frame, so the average
+     * rate comes out exact instead of being rounded to whole display frames.
+     *
+     * @param now the timestamp requestAnimationFrame hands us, in milliseconds
+     */
+    function loop(now) {
         // The frequency of calls to the callback function will generally match the display refresh rate.
         // The most common refresh rate is 60hz, (60 cycles/frames per second), though 75hz, 120hz, and 144hz
         // are also widely used. requestAnimationFrame() calls are paused in most browsers when running in
         // background tabs in order to improve performance and battery life.
         requestAnimationFrame(loop);
+
+        // the very first frame has nothing to measure from
+        if (last_frame_time === 0) {
+            last_frame_time = now;
+            return;
+        }
+
+        // how much real time to account for, capped so that coming back to a backgrounded
+        // tab doesn't fast-forward the game through a hundred steps at once
+        let elapsed = now - last_frame_time;
+        last_frame_time = now;
+        if (elapsed > MAX_FRAME_MS) elapsed = MAX_FRAME_MS;
+
+        step_backlog += elapsed;
+        let stepped = false;
+        while (step_backlog >= LOGIC_STEP_MS) {
+            step_backlog -= LOGIC_STEP_MS;
+            update();
+            stepped = true;
+        }
+
+        // only worth redrawing if something actually moved
+        if (stepped) draw();
     }
 
     // set up keyboard processing
@@ -300,8 +341,8 @@
 
     // restart (first start) game logic
     restart();
-    // loop forever
-    loop();
+    // loop forever - let requestAnimationFrame supply the first timestamp
+    requestAnimationFrame(loop);
 </script>
 
 </body>

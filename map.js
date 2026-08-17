@@ -213,8 +213,9 @@ class Map {
      * draw the player's mini map of the giant map using the mini map context
      * @param mCtx the mini map context
      * @param ship the player
+     * @param enemy the AI opponent (optional)
      */
-    drawMinimap(mCtx, ship) {
+    drawMinimap(mCtx, ship, enemy) {
         mCtx.clearRect(0,0,150,150);
         const s = 150 / GRID_RES;
         for(let x=0; x<GRID_RES; x++) {
@@ -224,6 +225,8 @@ class Map {
                         mCtx.fillStyle = BASE_COLOR_SMALL_MAP;
                     } else if (x === ship.end_x && y === ship.end_y) {
                         mCtx.fillStyle = NEXT_LEVEL_COLOR_SMALL_MAP;
+                    } else if (enemy && x === enemy.pad_x && y === enemy.pad_y) {
+                        mCtx.fillStyle = ENEMY_BASE_COLOR_SMALL_MAP;
                     } else {
                         mCtx.fillStyle = '#444';
                     }
@@ -234,6 +237,12 @@ class Map {
         // draw the "ship" on the mini-map
         mCtx.fillStyle = 'red';
         mCtx.fillRect((ship.x/WORLD_SIZE)*150 - 2, (ship.y/WORLD_SIZE)*150 - 2, 4, 4);
+
+        // and the enemy, so you can see it coming
+        if (enemy && !enemy.dead) {
+            mCtx.fillStyle = ENEMY_COLOR;
+            mCtx.fillRect((enemy.x/WORLD_SIZE)*150 - 2, (enemy.y/WORLD_SIZE)*150 - 2, 4, 4);
+        }
     }
 
     /**
@@ -272,8 +281,9 @@ class Map {
      * @param ctx the HTML drawing context
      * @param mCtx the HTML mini-map drawing context
      * @param ship the player
+     * @param enemy the AI opponent (optional)
      */
-    draw(ctx, mCtx, ship) {
+    draw(ctx, mCtx, ship, enemy) {
         // fill black background
         ctx.fillStyle = '#111';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -301,6 +311,8 @@ class Map {
                         ctx.fillStyle = BASE_COLOR;
                     } else if (x === ship.end_x && y === ship.end_y) {
                         ctx.fillStyle = NEXT_LEVEL_COLOR;
+                    } else if (enemy && x === enemy.pad_x && y === enemy.pad_y) {
+                        ctx.fillStyle = ENEMY_BASE_COLOR;
                     } else {
                         // blocks under water have a different colour from above the water-line
                         ctx.fillStyle = (y * TILE_SIZE >= WATER_Y) ? '#1a2a3a' : '#332211';
@@ -323,6 +335,14 @@ class Map {
             ship.draw(ctx);
         }
 
+        // draw the AI opponent, its shots and its wreckage
+        if (enemy) {
+            enemy.drawPath(ctx);
+            enemy.drawBullets(ctx);
+            enemy.drawParticles(ctx);
+            enemy.draw(ctx);
+        }
+
         // draw all turrets
         this.turret.forEach(t => {
             t.draw(ctx);
@@ -340,7 +360,7 @@ class Map {
         this.drawVignette(ctx);
 
         // Update Minimap Player Dot
-        this.drawMinimap(mCtx, ship);
+        this.drawMinimap(mCtx, ship, enemy);
 
         // draw heads up display
         ship.drawFuelGauge(ctx);

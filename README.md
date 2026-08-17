@@ -15,6 +15,8 @@ A high-precision, momentum-based cave navigator built with HTML5 Canvas.
 * Collect Magical Orbs for **1K Bonus** each
 * Refuel/Rearm your ship on your home (starting) pad
 * Destroy or Avoid Turrets protecting the cave system
+* Outfly the **AI Opponent** — an identical ship, in red, flying out of its own pad
+  somewhere else in the cave. Shoot it down for a **5K Bonus**; touch it and you both die.
 
 
 The terrain is procedurally generated using **Cellular Automata**, ensuring that every playthrough offers a unique, connected, and organic labyrinth.
@@ -50,6 +52,51 @@ The game uses standard keyboard inputs with UTF-8 support for HUD legend display
 -   **VFX System:** -   **Particle Explosions:** Ship shatters into physics-based fragments upon impact.
     -   **Dynamic HUD:** Real-time depth tracking and environmental status updates.
     -   **Minimap:** A real-time $150\text{px}$ navigation suite in the corner.
+-   **AI Opponent:** An autonomous ship flying the same underactuated hull you do — see below.
+
+---
+
+## 🤖 The AI Opponent
+
+The enemy flies the player's exact ship: it can only rotate, and thrust along its nose. It
+runs as two layers on two clocks, the way a real autonomy stack is built.
+
+**The planner** (`nav.js`, ~10 Hz) is what it knows about the cave:
+
+-   A **clearance field** — a Chebyshev distance transform, computed once per level, giving
+    every tile its distance to the nearest rock.
+-   **A\*** across the grid, where the step cost is charged an extra $1 + w/\text{clearance}$,
+    so routes prefer the middle of a cavern to scraping along a wall.
+-   **String pulling** over a DDA voxel raycast, which collapses the staircase A\* returns
+    into a few smooth diagonal legs.
+
+**The controller** (`enemy.js`, every frame) flies the route:
+
+-   An **arrive** law for desired velocity, damped by the velocity error — the derivative
+    term of a PD loop, so it settles onto a waypoint instead of swinging past it.
+-   **Medium cancellation:** $T = a_{cmd} - g_{eff} + v(1-\text{drag})$. Since `BUOYANCY` is
+    negative, this one term flips sign below the waterline: in air the ship points **up** and
+    burns against gravity, and submerged it pitches **down** and burns downwards to hold its
+    depth. The reversal is not a special case — it falls out of the physics.
+-   **Gravity is free:** it never burns in the direction the medium already pulls, which keeps
+    the nose permanently in the half-plane that can fight it.
+-   **Wall avoidance** in two halves: a Khatib repulsive potential $k(1/d - 1/R)/d^2$ for the
+    static barrier, plus the braking law $v^2/2s$ that asks what deceleration would actually
+    be needed to stop in the gap left — charged against the distance the ship drifts while it
+    turns, because on this hull the binding constraint is turn time, not thrust.
+-   **Speed rationed by clearance** — flat out across a cavern, a crawl down a crack.
+
+**The gun** solves for interception in closed form. Bullets inherit the shooter's velocity, so
+with $d$ the gap and $w$ the relative velocity, substituting $s = 1/t$ into
+$|d/t + w| = \text{AMMO\_SPEED}$ gives a quadratic
+
+$$|d|^2 s^2 + 2(d \cdot w)s + (|w|^2 - \text{AMMO\_SPEED}^2) = 0$$
+
+whose largest positive root is the soonest interception; the aim is then $d s + w$, normalised,
+and line-of-sight checked so it never fires into rock.
+
+Every gain, range and cooldown is a named constant in `const.js`. Set `ENEMY_DEBUG_PATH = true`
+to draw the route it has planned.
 
 ---
 
