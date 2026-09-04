@@ -75,6 +75,11 @@
             map.generateWorld();
             // both the player and the enemy need somewhere to launch from
             success = ship.reset(map) && enemy.reset(map, ship);
+            if (success) {
+                map.protectTile(ship.home_x, ship.home_y);
+                map.protectTile(ship.end_x, ship.end_y);
+                map.protectTile(enemy.pad_x, enemy.pad_y);
+            }
             map.placeTurrets(ship)
             map.placeOrbs(ship)
         }

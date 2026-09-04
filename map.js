@@ -12,9 +12,32 @@ class Map {
         this.num_turrets = num_turrets;     // number of turrets in the world initially
         this.orbs = [];                     // orb class items
         this.num_orbs = num_orbs;           // number of orbs in the world initially
+        this.tileDamage = [];                // hits taken by each cave tile
+        this.protectedTiles = new Set();     // landing pads that must survive the level
+        this.terrainRevision = 0;            // lets the AI refresh its cave knowledge
         this.water_time = 0;                // water offset for shimmer effect
         this.water_bubbles = [];            // bubbles under-water
+        this.terrainTextures = [            // intact to heavily fractured cave rock
+            'resources/rock-tile-umber.png',
+            'resources/rock-tile-umber-cracked-light.png',
+            'resources/rock-tile-umber-cracked-medium.png',
+            'resources/rock-tile-umber-cracked-heavy.png'
+        ].map(src => this.loadTexture(src));
+        this.terrainMaterials = [            // intact cave-material family
+            this.terrainTextures[0],
+            this.loadTexture('resources/rock-tile-umber-mineral.png'),
+            this.loadTexture('resources/rock-tile-umber-mossy.png'),
+            this.loadTexture('resources/rock-tile-umber-damp.png')
+        ];
+        this.terrainMaterial = [];           // stable material selected for each cave tile
         this.initBubbles();
+    }
+
+    /** Load one tile image once; the browser caches it for all later draws. */
+    loadTexture(src) {
+        const texture = new Image();
+        texture.src = src;
+        return texture;
     }
 
 
@@ -52,6 +75,84 @@ class Map {
 
         // make sure different caves connect
         this.ensureConnectivity();
+        this.tileDamage = Array.from({ length: GRID_RES }, () => Array(GRID_RES).fill(0));
+        this.terrainMaterial = this.createTerrainMaterials();
+        this.protectedTiles.clear();
+        this.terrainRevision++;
+    }
+
+    /**
+     * Give each cave tile one stable material. Smooth coordinate noise makes broad,
+     * natural patches instead of a flickering, checkerboard-like random mix.
+     */
+    createTerrainMaterials() {
+        const materials = Array.from({ length: GRID_RES }, () => Array(GRID_RES).fill(0));
+        for (let x = 0; x < GRID_RES; x++) {
+            for (let y = 0; y < GRID_RES; y++) {
+                if (this.grid[x][y] !== 1) continue;
+
+                const top = y * TILE_SIZE;
+                const cluster = this.terrainNoise(x, y, 4);
+                const exposedTop = y > 0 && this.grid[x][y - 1] === 0;
+
+                if (top >= WATER_Y) {
+                    materials[x][y] = 3; // damp stone belongs in the submerged cave
+                } else if (exposedTop && cluster > 0.72) {
+                    materials[x][y] = 2; // moss stays sparse and grows on upper surfaces
+                } else if (cluster > 0.50 && cluster < 0.68) {
+                    materials[x][y] = 1; // restrained mineral patches break up broad walls
+                }
+            }
+        }
+        return materials;
+    }
+
+    /** Deterministic, smoothly blended value noise in the 0–1 range. */
+    terrainNoise(x, y, scale) {
+        const sampleX = x / scale;
+        const sampleY = y / scale;
+        const x0 = Math.floor(sampleX);
+        const y0 = Math.floor(sampleY);
+        const fade = value => value * value * (3 - 2 * value);
+        const mix = (a, b, amount) => a + (b - a) * amount;
+        const fx = fade(sampleX - x0);
+        const fy = fade(sampleY - y0);
+        const top = mix(this.terrainHash(x0, y0), this.terrainHash(x0 + 1, y0), fx);
+        const bottom = mix(this.terrainHash(x0, y0 + 1), this.terrainHash(x0 + 1, y0 + 1), fx);
+        return mix(top, bottom, fy);
+    }
+
+    /** A coordinate hash keeps material choices fixed for the lifetime of the map. */
+    terrainHash(x, y) {
+        const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+        return value - Math.floor(value);
+    }
+
+    /** Keep a mission-critical landing pad intact even when the player mines nearby rock. */
+    protectTile(x, y) {
+        this.protectedTiles.add(`${x},${y}`);
+    }
+
+    /**
+     * Apply one player-shot impact. The world border is always solid, and protected
+     * landing pads stay available so a mined-out cave cannot strand either ship.
+     * @returns {boolean} whether the shot hit solid terrain and should disappear
+     */
+    damageTile(x, y) {
+        if (x < 0 || y < 0 || x >= GRID_RES || y >= GRID_RES || this.grid[x][y] !== 1) {
+            return false;
+        }
+
+        const border = x === 0 || y === 0 || x === GRID_RES - 1 || y === GRID_RES - 1;
+        if (border || this.protectedTiles.has(`${x},${y}`)) return true;
+
+        this.tileDamage[x][y]++;
+        if (this.tileDamage[x][y] >= TILE_HITS_TO_DESTROY) {
+            this.grid[x][y] = 0;
+            this.tileDamage[x][y] = 0;
+            this.terrainRevision++;
+        }
+        return true;
     }
 
     /**
@@ -306,22 +407,30 @@ class Map {
         for (let x = 0; x < GRID_RES; x++) {
             for (let y = 0; y < GRID_RES; y++) {
                 if (this.grid[x][y] === 1) { // filled in / not empty?
-                    // our base has a different colour from all the other blocks
+                    const left = x * TILE_SIZE;
+                    const top = y * TILE_SIZE;
+                    // Our landing pads retain their identifying colours. Every other
+                    // cave block uses the same edge-to-edge rock texture, so a wall
+                    // reads as continuous stone instead of a grid of flat fills.
                     if (x === ship.home_x && y === ship.home_y) {
                         ctx.fillStyle = BASE_COLOR;
+                        ctx.fillRect(left, top, TILE_SIZE, TILE_SIZE);
                     } else if (x === ship.end_x && y === ship.end_y) {
                         ctx.fillStyle = NEXT_LEVEL_COLOR;
+                        ctx.fillRect(left, top, TILE_SIZE, TILE_SIZE);
                     } else if (enemy && x === enemy.pad_x && y === enemy.pad_y) {
                         ctx.fillStyle = ENEMY_BASE_COLOR;
+                        ctx.fillRect(left, top, TILE_SIZE, TILE_SIZE);
                     } else {
-                        // blocks under water have a different colour from above the water-line
-                        ctx.fillStyle = (y * TILE_SIZE >= WATER_Y) ? '#1a2a3a' : '#332211';
+                        const material = this.terrainMaterial[x][y];
+                        this.drawTerrainTexture(ctx, this.terrainMaterials[material], left, top);
+                        this.drawTileDamage(ctx, x, y);
+                        // Preserve the depth cue without replacing the rock material.
+                        if (top >= WATER_Y) {
+                            ctx.fillStyle = 'rgba(14, 38, 64, 0.42)';
+                            ctx.fillRect(left, top, TILE_SIZE, TILE_SIZE);
+                        }
                     }
-                    // create the block
-                    ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                    // with a border
-                    ctx.strokeStyle = '#000';
-                    ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 }
             }
         }
@@ -367,6 +476,28 @@ class Map {
         ship.drawAmmoGauge(ctx);
         ship.drawLives(ctx, LIVES_X, LIVES_Y);
         this.drawOrbs(ctx, ORBS_X, ORBS_Y);
+    }
+
+    /** Replace rock with the matching fracture texture as it absorbs damage. */
+    drawTileDamage(ctx, x, y) {
+        const hits = this.tileDamage[x][y];
+        if (hits === 0) return;
+
+        const left = x * TILE_SIZE;
+        const top = y * TILE_SIZE;
+        const stage = Math.min(TILE_DAMAGE_STAGES,
+            Math.ceil(hits / (TILE_HITS_TO_DESTROY / TILE_DAMAGE_STAGES)));
+        this.drawTerrainTexture(ctx, this.terrainTextures[stage], left, top);
+    }
+
+    /** Keep terrain visible while an image is still loading on the first frame. */
+    drawTerrainTexture(ctx, texture, left, top) {
+        if (texture.complete && texture.naturalWidth > 0) {
+            ctx.drawImage(texture, left, top, TILE_SIZE, TILE_SIZE);
+            return;
+        }
+        ctx.fillStyle = '#5d4b3a';
+        ctx.fillRect(left, top, TILE_SIZE, TILE_SIZE);
     }
 
     /**
@@ -478,4 +609,3 @@ class Map {
     }
 
 }
-

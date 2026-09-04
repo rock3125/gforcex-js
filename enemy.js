@@ -55,6 +55,7 @@ class Enemy {
         this.thrusting = false;     // for drawing the flame
 
         this.nav = new Nav();       // what it knows about the cave
+        this.terrainRevision = -1;  // revision used to build the current clearance field
         this.mode = MODE_LAUNCH;
         this.path = [];             // waypoints from the planner, world coordinates
         this.planTick = 1;          // frames until the planner next runs
@@ -80,6 +81,7 @@ class Enemy {
      */
     reset(map, ship) {
         this.nav.computeClearance(map.grid); // learn this cave
+        this.terrainRevision = map.terrainRevision;
 
         let best = null;
         let bestDistance = -1;
@@ -183,6 +185,11 @@ class Enemy {
      * @param ship the player
      */
     plan(map, ship) {
+        // Player mining can open a new route; refresh only when the terrain changed.
+        if (this.terrainRevision !== map.terrainRevision) {
+            this.nav.computeClearance(map.grid);
+            this.terrainRevision = map.terrainRevision;
+        }
         // the player is dead or between lives - stop hunting a ghost and just hover
         if (gameOver) {
             this.mode = MODE_HOLD;

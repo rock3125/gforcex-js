@@ -220,7 +220,7 @@ class Ship {
             // Collision with cave walls?
             const gx = Math.floor(b.x / TILE_SIZE);
             const gy = Math.floor(b.y / TILE_SIZE);
-            const hitWall = map.grid[gx] && map.grid[gx][gy] === 1;
+            const hitWall = map.damageTile(gx, gy);
 
             // Keep bullet only if alive and hasn't hit a wall
             return b.ttl > 0 && !hitWall;
