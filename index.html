@@ -6,6 +6,8 @@
     <script type="text/javascript" src="const.js"></script>
     <script type="text/javascript" src="sound.js"></script>
     <script type="text/javascript" src="orb.js"></script>
+    <script type="text/javascript" src="wasm/terrain-inline.js"></script>
+    <script type="text/javascript" src="wasm/terrain-bridge.js"></script>
     <script type="text/javascript" src="map.js"></script>
     <script type="text/javascript" src="ship.js"></script>
     <script type="text/javascript" src="turret.js"></script>
@@ -14,6 +16,20 @@
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
+<main id="launcher" aria-labelledby="launcherTitle">
+    <section class="launch-console" aria-describedby="launchDescription">
+        <h1 id="launcherTitle">ROCK'S G-FORCE X<br>Take the cave at full thrust.</h1>
+        <p id="launchDescription" class="launch-description">A momentum-driven cavern flight, with a procedural terrain core compiled to WebAssembly.</p>
+        <button id="launchGame" class="launch-button" type="button">
+            <span>Launch WASM game</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+        </button>
+        <p id="launchStatus" class="launch-status" role="status" aria-live="polite">The terrain module will load when you launch.</p>
+        <p class="launch-note">Serve this folder over HTTP to play the WebAssembly build.</p>
+    </section>
+</main>
+
+<main id="gameShell" hidden>
 <div id="gameOver">GAME OVER</div>
 <div id="nextLevel">NEXT LEVEL</div>
 <div id="allOrbs">ALL ORBS COLLECTED!</div>
@@ -42,8 +58,13 @@
 
 <canvas id="gameCanvas"></canvas>
 <canvas id="minimap" width="150" height="150"></canvas>
+</main>
 
 <script>
+    const launcher = document.getElementById('launcher');
+    const gameShell = document.getElementById('gameShell');
+    const launchButton = document.getElementById('launchGame');
+    const launchStatus = document.getElementById('launchStatus');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const mCanvas = document.getElementById('minimap');
@@ -226,9 +247,13 @@
         if (stepped) draw();
     }
 
-    // set up keyboard processing
-    window.addEventListener('keydown', e => keys[e.code] = true);
-    window.addEventListener('keyup', e => keys[e.code] = false);
+    let inputsBound = false;
+    function bindGameInputs() {
+        if (inputsBound) return;
+        inputsBound = true;
+        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keyup', e => keys[e.code] = false);
+    }
 
     // set up screen resize logic
     window.addEventListener('resize', () => {
@@ -344,10 +369,34 @@
     }
     // --- End Mobile Controls Logic ---
 
-    // restart (first start) game logic
-    restart();
-    // loop forever - let requestAnimationFrame supply the first timestamp
-    requestAnimationFrame(loop);
+    let gameStarted = false;
+    async function startGame() {
+        if (gameStarted) return;
+        launchButton.disabled = true;
+        launchButton.setAttribute('aria-busy', 'true');
+        launchButton.firstElementChild.textContent = 'Loading WebAssembly…';
+        launchStatus.textContent = 'Loading the terrain core.';
+
+        try {
+            map.attachWasmTerrain(await WasmTerrain.create());
+        } catch (error) {
+            console.error('WASM terrain failed to load.', error);
+            launchButton.disabled = false;
+            launchButton.removeAttribute('aria-busy');
+            launchButton.firstElementChild.textContent = 'Try again';
+            launchStatus.textContent = 'WebAssembly could not load. Serve this folder over HTTP, then try again.';
+            return;
+        }
+
+        gameStarted = true;
+        restart();
+        gameShell.hidden = false;
+        launcher.hidden = true;
+        bindGameInputs();
+        requestAnimationFrame(loop);
+    }
+
+    launchButton.addEventListener('click', startGame);
 </script>
 
 </body>

@@ -103,6 +103,7 @@ to draw the route it has planned.
 ## 🛠️ Technical Details
 
 -   **Language:** JavaScript (ES6+)
+-   **Terrain simulation:** WebAssembly (AssemblyScript), with a JavaScript fallback
 -   **Renderer:** HTML5 Canvas API
 -   **World Scale:** 3000 x 3000 World Units
 -   **Performance:** Implemented draw-culling (only tiles within the camera viewport are rendered) to maintain a smooth 60 FPS.
@@ -112,7 +113,40 @@ to draw the route it has planned.
 ## 🏗️ Setup & Installation
 
 1. Clone the repository.
-2. Open `index.html` in any modern web browser.
-3. No dependencies or build steps required—just pure JS.
+2. Open `index.html` in any modern web browser and select **Launch WASM game**.
+3. No dependencies or build steps are required to play the checked-in build.
+
+### WebAssembly terrain module
+
+The procedural cave generation, material selection, and rock damage state are compiled
+to `wasm/dist/terrain.wasm`. The checked-in binary lets the game run immediately; rebuild
+it after changing `wasm/assembly/terrain.ts`:
+
+```bash
+cd wasm
+npm install
+npm run build
+npm test
+```
+
+When served over HTTP, the browser fetches the compact WASM binary directly:
+
+```bash
+node server.js
+```
+
+Opening `index.html` directly also works: the build generates `wasm/terrain-inline.js`,
+an embedded copy of the same binary for browsers that block `file://` WASM fetches.
+
+### Distribution
+
+Create a browser-ready zip with the compiled WASM, game assets, and local server:
+
+```bash
+make dist
+```
+
+The archive is written to `dist/gforcex-js-wasm.zip`. Extract it and open `index.html`,
+or run `node server.js` from the extracted folder and browse to `http://localhost:3000`.
 
 ---

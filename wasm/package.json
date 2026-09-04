@@ -1,0 +1,12 @@
+{
+  "name": "gforcex-wasm",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "asc assembly/terrain.ts --target release --outFile dist/terrain.wasm && node scripts/embed-wasm.mjs",
+    "test": "node test/terrain.test.mjs && node test/terrain-bridge.test.mjs && node test/launcher.test.mjs"
+  },
+  "devDependencies": {
+    "assemblyscript": "^0.28.0"
+  }
+}

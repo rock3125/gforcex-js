@@ -30,6 +30,7 @@ class Map {
             this.loadTexture('resources/rock-tile-umber-damp.png')
         ];
         this.terrainMaterial = [];           // stable material selected for each cave tile
+        this.wasmTerrain = null;             // optional WebAssembly terrain implementation
         this.initBubbles();
     }
 
@@ -40,6 +41,11 @@ class Map {
         return texture;
     }
 
+    /** Attach the WASM terrain module before the first world is generated. */
+    attachWasmTerrain(terrain) {
+        this.wasmTerrain = terrain;
+    }
+
 
     /**
      * create a two-dimensional map
@@ -47,6 +53,17 @@ class Map {
     generateWorld() {
         this.turret = [];   // reset orbs and turrets
         this.orbs = [];
+
+        if (this.wasmTerrain) {
+            const seed = Math.floor(Math.random() * 0x100000000);
+            const world = this.wasmTerrain.generateWorld(seed);
+            this.grid = world.grid;
+            this.tileDamage = Array.from({ length: GRID_RES }, () => Array(GRID_RES).fill(0));
+            this.terrainMaterial = world.materials;
+            this.protectedTiles.clear();
+            this.terrainRevision++;
+            return;
+        }
 
         // a two-dimensional array that is the world all filled in
         this.grid = Array.from({ length: GRID_RES }, () => Array(GRID_RES).fill(1));
@@ -145,6 +162,18 @@ class Map {
 
         const border = x === 0 || y === 0 || x === GRID_RES - 1 || y === GRID_RES - 1;
         if (border || this.protectedTiles.has(`${x},${y}`)) return true;
+
+        if (this.wasmTerrain) {
+            const result = this.wasmTerrain.damageTile(x, y, TILE_HITS_TO_DESTROY);
+            if (result === 0) return false;
+            this.tileDamage[x][y] = this.wasmTerrain.getDamage(x, y);
+            if (result === 2) {
+                this.grid[x][y] = 0;
+                this.tileDamage[x][y] = 0;
+                this.terrainRevision++;
+            }
+            return true;
+        }
 
         this.tileDamage[x][y]++;
         if (this.tileDamage[x][y] >= TILE_HITS_TO_DESTROY) {
